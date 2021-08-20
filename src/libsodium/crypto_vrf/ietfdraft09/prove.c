@@ -81,10 +81,13 @@ vrf_nonce_generation(unsigned char k_scalar[32],
  * Takes in a secret scalar x, a public point Y, and a secret string
  * truncated_hashed_sk that is used in nonce generation.
  * These are computed from the secret key using the expand_sk function.
- * Constant time in everything except alphalen (the length of the message)
+ * Constant time in everything except alphalen (the length of the message).
+ *
+ * The proof contains the two points U and V instead of the challenge
+ * to allow for batch-verification.
  */
 static void
-vrf_prove(unsigned char pi[80], const ge25519_p3 *Y_point,
+vrf_prove(unsigned char pi[128], const ge25519_p3 *Y_point,
           const unsigned char x_scalar[32],
           const unsigned char truncated_hashed_sk_string[32],
           const unsigned char *alpha, unsigned long long alphalen)
@@ -103,7 +106,7 @@ vrf_prove(unsigned char pi[80], const ge25519_p3 *Y_point,
     ge25519_scalarmult(&kH_point, k_scalar, &H_point); /* compute k*H */
 
     /* c = ECVRF_hash_points(h, gamma, k*B, k*H)
-     * (writes only to the first 16 bytes of c_scalar
+     * (writes only to the first 16 bytes of c_scalar)
      * We need to pass kB and kH to bytes for the new
      * function signature
      * */
@@ -116,8 +119,9 @@ vrf_prove(unsigned char pi[80], const ge25519_p3 *Y_point,
 
     /* output pi */
     _vrf_ietfdraft09_point_to_string(pi, &Gamma_point); /* pi[0:32] = point_to_string(Gamma) */
-    memmove(pi+32, c_scalar, 16); /* pi[32:48] = c (16 bytes) */
-    sc25519_muladd(pi+48, c_scalar, x_scalar, k_scalar); /* pi[48:80] = s = c*x + k (mod q) */
+    memmove(pi + 32, kB_bytes, 32); /* pi[32:64] = point_to_string(kB_point) */
+    memmove(pi + 64, kH_bytes, 32); /* pi[64:96] = point_to_string(kH_point) */
+    sc25519_muladd(pi+96, c_scalar, x_scalar, k_scalar); /* pi[96:128] = s = c*x + k (mod q) */
 
     sodium_memzero(k_scalar, sizeof k_scalar); /* k must remain secret */
     /* erase other non-sensitive intermediate state for good measure */
