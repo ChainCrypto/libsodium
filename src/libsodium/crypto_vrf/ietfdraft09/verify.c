@@ -140,7 +140,14 @@ vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[128],
     memset(s_scalar+32, 0, 32);
     sc25519_reduce(s_scalar);
 
-    _vrf_ietfdraft09_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen);
+    /*
+     * If try and increment fails after `TAI_NR_TRIES` tries, then we run elligator.
+     * Given that this occurs with probability ~1/2^{`TAI_NR_TRIES`}, the performance
+     * improvements are still noticeable
+     */
+    if (_vrf_ietfdraft09_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen) != 0) {
+        _vrf_ietfdraft09_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
+    };
     ge25519_frombytes(&H_point, h_string);
 
     _vrf_ietfdraft09_hash_points(c_scalar, &H_point, &Gamma_point, expected_U_bytes, expected_V_bytes);

@@ -34,16 +34,16 @@ int _vrf_ietfdraft09_string_to_point(ge25519_p3 *point,
 int _vrf_ietfdraft09_decode_proof(ge25519_p3 *Gamma, unsigned char U[32], unsigned char V[32],
                                   unsigned char s[32], const unsigned char pi[128]);
 
-void _vrf_ietfdraft09_hash_to_curve_try_inc(unsigned char H_string[32],
+void
+_vrf_ietfdraft09_hash_to_curve_elligator2_25519(unsigned char H_string[32],
+                                                const ge25519_p3 *Y_point,
+                                                const unsigned char *alpha,
+                                                const unsigned long long alphalen);
+
+int _vrf_ietfdraft09_hash_to_curve_try_inc(unsigned char H_string[32],
                                             const ge25519_p3 *Y_point,
                                             const unsigned char *alpha,
                                             const unsigned long long alphalen);
-
-void
-_vrf_ietfdraft09_hash_to_curve_elligator2_25519_ietf(unsigned char H_string[32],
-                                                     const ge25519_p3 *Y_point,
-                                                     const unsigned char *alpha,
-                                                     const unsigned long long alphalen);
 
 void _vrf_ietfdraft09_hash_points(unsigned char c[16], const ge25519_p3 *P1,
                                   const ge25519_p3 *P2, const unsigned char *P3,
