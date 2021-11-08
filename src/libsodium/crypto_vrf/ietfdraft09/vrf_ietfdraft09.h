@@ -23,7 +23,7 @@ SOFTWARE.
 #ifndef vrf_ietfdraft09_H
 #define vrf_ietfdraft09_H
 
-static const unsigned char SUITE = 0x03; /* ECVRF-ED25519-SHA512-TAI */
+static const unsigned char SUITE = 0x04; /* ECVRF-ED25519-SHA512-ELL2 */
 
 void _vrf_ietfdraft09_point_to_string(unsigned char string[32],
                                       const ge25519_p3 *point);

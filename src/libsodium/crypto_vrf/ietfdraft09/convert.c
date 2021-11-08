@@ -89,21 +89,13 @@ _vrf_ietfdraft09_hash_to_curve_elligator2_25519(unsigned char H_string[32],
                                                 const unsigned char *alpha,
                                                 const unsigned long long alphalen)
 {
-    crypto_hash_sha512_state hs;
-    unsigned char            Y_string[32], r_string[64];
+    unsigned char            Y_string[32], string_to_hash[32 + alphalen];
 
     _vrf_ietfdraft09_point_to_string(Y_string, Y_point);
+    memmove(string_to_hash, Y_string, 32);
+    memmove(string_to_hash + 32, alpha, alphalen);
 
-    /* r = first 32 bytes of SHA512(suite || 0x01 || Y || alpha) */
-    crypto_hash_sha512_init(&hs);
-    crypto_hash_sha512_update(&hs, &SUITE, 1);
-    crypto_hash_sha512_update(&hs, &ONE, 1);
-    crypto_hash_sha512_update(&hs, Y_string, 32);
-    crypto_hash_sha512_update(&hs, alpha, alphalen);
-    crypto_hash_sha512_final(&hs, r_string);
-
-    r_string[31] &= 0x7f; /* clear sign bit */
-    ge25519_from_uniform(H_string, r_string); /* elligator2 */
+    crypto_core_ed25519_from_string(H_string, "ECVRF_edwards25519_XMD:SHA-512_ELL2_NU_\4", string_to_hash, 32 + alphalen, 2); /* elligator2 */
 }
 
 
