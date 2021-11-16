@@ -1,6 +1,6 @@
 /*
 Slight modification of document ./../ietfdraft03/convert.c to follow the
-latest version of the standard, using the "Try and Increment" hash_to_curve
+latest version of the standard, using the updated "Elligator2" hash_to_curve
 function. We reproduce the copyright notice.
 Copyright (c) 2018 Algorand LLC
 Permission is hereby granted, free of charge, to any person obtaining a copy

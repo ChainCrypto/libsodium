@@ -1,6 +1,6 @@
 /*
 Slight modification of document ./../ietfdraft03/convert.c to follow the
-latest version of the standard, using the "Try and Increment" hash_to_curve
+latest version of the standard, using the updated "Elligator2" hash_to_curve
 function. We reproduce the copyright notice.
 Copyright (c) 2018 Algorand LLC
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -97,11 +97,6 @@ vrf_prove(unsigned char pi[128], const ge25519_p3 *Y_point,
     unsigned char h_string[32], k_scalar[32], c_scalar[32];
     ge25519_p3    H_point, Gamma_point, kB_point, kH_point;
 
-    /*
-     * If try and increment fails after `TAI_NR_TRIES` tries, then we run elligator.
-     * Given that this occurs with probability ~1/2^{`TAI_NR_TRIES`}, the performance
-     * improvements are still noticeable
-     */
     _vrf_ietfdraft09_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
     ge25519_frombytes(&H_point, h_string);
 
