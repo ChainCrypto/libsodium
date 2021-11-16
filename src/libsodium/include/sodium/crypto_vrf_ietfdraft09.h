@@ -4,6 +4,8 @@
 
 #include <stddef.h>
 
+#include "crypto_core_ed25519.h"
+#include "crypto_hash_sha512.h"
 #include "export.h"
 
 #ifdef __cplusplus

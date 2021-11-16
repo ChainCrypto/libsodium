@@ -54,7 +54,7 @@ multiply_by_cofactor(ge25519_p3 *point) {
  * 5.1.2.
  */
 void
-_vrf_ietfdraft09_point_to_string(unsigned char string[32], const ge25519_p3 *point)
+_vrf_ietfdraft09_point_to_string(unsigned char string[crypto_core_ed25519_BYTES], const ge25519_p3 *point)
 {
     ge25519_p3_tobytes(string, point);
 }
@@ -68,7 +68,7 @@ _vrf_ietfdraft09_point_to_string(unsigned char string[32], const ge25519_p3 *poi
  * stores decoded point in *point), nonzero if decoding fails.
  */
 int
-_vrf_ietfdraft09_string_to_point(ge25519_p3 *point, const unsigned char string[32])
+_vrf_ietfdraft09_string_to_point(ge25519_p3 *point, const unsigned char string[crypto_core_ed25519_BYTES])
 {
     if (ge25519_is_canonical(string) == 0 ||
         ge25519_frombytes(point, string) != 0) {
@@ -84,18 +84,18 @@ _vrf_ietfdraft09_string_to_point(ge25519_p3 *point, const unsigned char string[3
  * Runtime depends only on alphalen (the message length)
  */
 void
-_vrf_ietfdraft09_hash_to_curve_elligator2_25519(unsigned char H_string[32],
+_vrf_ietfdraft09_hash_to_curve_elligator2_25519(unsigned char H_string[crypto_core_ed25519_BYTES],
                                                 const ge25519_p3 *Y_point,
                                                 const unsigned char *alpha,
                                                 const unsigned long long alphalen)
 {
-    unsigned char            Y_string[32], string_to_hash[32 + alphalen];
+    unsigned char            Y_string[crypto_vrf_ietfdraft09_PUBLICKEYBYTES], string_to_hash[crypto_vrf_ietfdraft09_PUBLICKEYBYTES + alphalen];
 
     _vrf_ietfdraft09_point_to_string(Y_string, Y_point);
-    memmove(string_to_hash, Y_string, 32);
-    memmove(string_to_hash + 32, alpha, alphalen);
+    memmove(string_to_hash, Y_string, crypto_vrf_ietfdraft09_PUBLICKEYBYTES);
+    memmove(string_to_hash + crypto_vrf_ietfdraft09_PUBLICKEYBYTES, alpha, alphalen);
 
-    crypto_core_ed25519_from_string(H_string, "ECVRF_edwards25519_XMD:SHA-512_ELL2_NU_\4", string_to_hash, 32 + alphalen, 2); /* elligator2 */
+    crypto_core_ed25519_from_string(H_string, "ECVRF_edwards25519_XMD:SHA-512_ELL2_NU_\4", string_to_hash, crypto_vrf_ietfdraft09_PUBLICKEYBYTES + alphalen, 2); /* elligator2 */
 }
 
 
@@ -108,12 +108,12 @@ _vrf_ietfdraft09_hash_to_curve_elligator2_25519(unsigned char H_string[32],
  * non-terminating functions, we adopt this modification.
  */
 int
-_vrf_ietfdraft09_hash_to_curve_try_inc(unsigned char H_string[32],
+_vrf_ietfdraft09_hash_to_curve_try_inc(unsigned char H_string[crypto_core_ed25519_BYTES],
                                        const ge25519_p3 *Y_point,
                                        const unsigned char *alpha,
                                        const unsigned long long alphalen)
 {
-    unsigned char            Y_string[32], r_string[64];
+    unsigned char            Y_string[crypto_vrf_ietfdraft09_PUBLICKEYBYTES], r_string[crypto_hash_sha512_BYTES];
 
     _vrf_ietfdraft09_point_to_string(Y_string, Y_point);
 
@@ -125,7 +125,7 @@ _vrf_ietfdraft09_hash_to_curve_try_inc(unsigned char H_string[32],
         crypto_hash_sha512_init(&hs);
         crypto_hash_sha512_update(&hs, &SUITE, 1);
         crypto_hash_sha512_update(&hs, &ONE, 1);
-        crypto_hash_sha512_update(&hs, Y_string, 32);
+        crypto_hash_sha512_update(&hs, Y_string, crypto_vrf_ietfdraft09_PUBLICKEYBYTES);
         crypto_hash_sha512_update(&hs, alpha, alphalen);
         crypto_hash_sha512_update(&hs, &value, 1);
         crypto_hash_sha512_update(&hs, &ZERO, 1);
@@ -152,18 +152,18 @@ _vrf_ietfdraft09_hash_points(unsigned char c[16], const ge25519_p3 *P1,
                              const ge25519_p3 *P2, const unsigned char *P3,
                              const unsigned char *P4)
 {
-    unsigned char str[3+32*4], c1[64];
+    unsigned char str[3+32*4], c1[crypto_hash_sha512_BYTES];
 
     str[0] = SUITE;
     str[1] = TWO;
-    _vrf_ietfdraft09_point_to_string(str+2+32*0, P1);
-    _vrf_ietfdraft09_point_to_string(str+2+32*1, P2);
-    memmove(str+2+32*2, P3, 32);
-    memmove(str+2+32*3, P4, 32);
-    str[2 + 32*4] = ZERO;
+    _vrf_ietfdraft09_point_to_string(str+2+crypto_core_ed25519_BYTES*0, P1);
+    _vrf_ietfdraft09_point_to_string(str+2+crypto_core_ed25519_BYTES*1, P2);
+    memmove(str+2+crypto_core_ed25519_BYTES*2, P3, crypto_core_ed25519_BYTES);
+    memmove(str+2+crypto_core_ed25519_BYTES*3, P4, crypto_core_ed25519_BYTES);
+    str[2 + crypto_core_ed25519_BYTES*4] = ZERO;
     crypto_hash_sha512(c1, str, sizeof str);
     memmove(c, c1, 16);
-    sodium_memzero(c1, 64);
+    sodium_memzero(c1, crypto_hash_sha512_BYTES);
 }
 
 /* Decode an 128-byte batch-compatible proof pi into a point gamma, a point U, a point V, and a
@@ -171,17 +171,17 @@ _vrf_ietfdraft09_hash_points(unsigned char c[16], const ge25519_p3 *P1,
  * Returns 0 on success, nonzero on failure.
  */
 int
-_vrf_ietfdraft09_decode_proof(ge25519_p3 *Gamma, unsigned char U[32], unsigned char V[32],
-                              unsigned char s[32], const unsigned char pi[128])
+_vrf_ietfdraft09_decode_proof(ge25519_p3 *Gamma, unsigned char U[crypto_core_ed25519_BYTES], unsigned char V[crypto_core_ed25519_BYTES],
+                              unsigned char s[crypto_core_ed25519_SCALARBYTES], const unsigned char pi[crypto_vrf_ietfdraft09_PROOFBYTES])
 {
     /* gamma = decode_point(pi[0:32]) */
     if (_vrf_ietfdraft09_string_to_point(Gamma, pi) != 0) {
         return -1;
     }
 
-    memmove(U, pi+32, 32);
-    memmove(V, pi+64, 32);
-    memmove(s, pi+96, 32);
+    memmove(U, pi+crypto_core_ed25519_BYTES, crypto_core_ed25519_BYTES);
+    memmove(V, pi+crypto_core_ed25519_BYTES * 2, crypto_core_ed25519_BYTES);
+    memmove(s, pi+crypto_core_ed25519_BYTES * 3, crypto_core_ed25519_SCALARBYTES);
 
     if (s[31] & 240 &&
         sc25519_is_canonical(s) == 0) {

@@ -61,8 +61,8 @@ crypto_vrf_ietfdraft09_proof_to_hash(unsigned char beta[crypto_vrf_ietfdraft09_O
                                      const unsigned char pi[crypto_vrf_ietfdraft09_PROOFBYTES])
 {
     ge25519_p3    Gamma_point;
-    unsigned char s_scalar[32], U_point[32], V_point[32];
-    unsigned char hash_input[3+32];
+    unsigned char s_scalar[crypto_core_ed25519_SCALARBYTES], U_point[crypto_core_ed25519_BYTES], V_point[crypto_core_ed25519_BYTES];
+    unsigned char hash_input[3+crypto_core_ed25519_BYTES];
 
     /* (Gamma, c, s) = ECVRF_decode_proof(pi_string) */
     if (_vrf_ietfdraft09_decode_proof(&Gamma_point, U_point, V_point, s_scalar, pi) != 0) {
@@ -74,7 +74,7 @@ crypto_vrf_ietfdraft09_proof_to_hash(unsigned char beta[crypto_vrf_ietfdraft09_O
     hash_input[1] = THREE;
     multiply_by_cofactor(&Gamma_point);
     _vrf_ietfdraft09_point_to_string(hash_input+2, &Gamma_point);
-    hash_input[34] = ZERO;
+    hash_input[crypto_core_ed25519_BYTES + 2] = ZERO;
     crypto_hash_sha512(beta, hash_input, sizeof hash_input);
 
     return 0;
@@ -91,7 +91,7 @@ crypto_vrf_ietfdraft09_proof_to_hash(unsigned char beta[crypto_vrf_ietfdraft09_O
  * failure.
  */
 static int
-vrf_validate_key(ge25519_p3 *y_out, const unsigned char pk_string[32])
+vrf_validate_key(ge25519_p3 *y_out, const unsigned char pk_string[crypto_vrf_ietfdraft09_PUBLICKEYBYTES])
 {
     if (ge25519_has_small_order(pk_string) != 0 || _vrf_ietfdraft09_string_to_point(y_out, pk_string) != 0) {
         return -1;
@@ -115,13 +115,13 @@ crypto_vrf_ietfdraft09_is_valid_key(const unsigned char pk[crypto_vrf_ietfdraft0
  * (but does depend on its length alphalen)
  */
 static int
-vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[128],
+vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraft09_PROOFBYTES],
            const unsigned char *alpha, const unsigned long long alphalen)
 {
     /* Note: c fits in 16 bytes, but ge25519_scalarmult expects a 32-byte scalar.
      * Similarly, s_scalar fits in 32 bytes but sc25519_reduce takes in 64 bytes. */
-    unsigned char h_string[32], cn_scalar[32], c_scalar[32], s_scalar[64],
-            expected_U_bytes[32], expected_V_bytes[32], U_bytes[32], V_bytes[32];
+    unsigned char h_string[crypto_core_ed25519_BYTES], cn_scalar[crypto_core_ed25519_SCALARBYTES], c_scalar[crypto_core_ed25519_SCALARBYTES], s_scalar[64],
+            expected_U_bytes[crypto_core_ed25519_BYTES], expected_V_bytes[crypto_core_ed25519_BYTES], U_bytes[crypto_core_ed25519_BYTES], V_bytes[crypto_core_ed25519_BYTES];
 
     ge25519_p2     U_point, V_point;
     ge25519_p3     H_point, Gamma_point, tmp_p3_point;
@@ -137,7 +137,7 @@ vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[128],
      * Reducing the scalar s mod q ensures the high order bit of s is 0, which
      * ref10's scalarmult functions require.
      */
-    memset(s_scalar+32, 0, 32);
+    memset(s_scalar+crypto_core_ed25519_SCALARBYTES, 0, crypto_core_ed25519_SCALARBYTES);
     sc25519_reduce(s_scalar);
 
     _vrf_ietfdraft09_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
@@ -159,7 +159,7 @@ vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[128],
     ge25519_tobytes(U_bytes, &U_point);
     ge25519_tobytes(V_bytes, &V_point);
 
-    for (int i = 0; i<32; i++) {
+    for (int i = 0; i<crypto_core_ed25519_BYTES; i++) {
         if (U_bytes[i] != expected_U_bytes[i] || V_bytes[i] != expected_V_bytes[i]) {
             return -1;
         }
