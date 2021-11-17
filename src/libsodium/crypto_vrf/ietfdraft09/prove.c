@@ -97,7 +97,17 @@ vrf_prove(unsigned char pi[crypto_vrf_ietfdraft09_PROOFBYTES], const ge25519_p3 
     unsigned char h_string[crypto_core_ed25519_BYTES], k_scalar[crypto_core_ed25519_SCALARBYTES], c_scalar[crypto_core_ed25519_SCALARBYTES];
     ge25519_p3    H_point, Gamma_point, kB_point, kH_point;
 
+#ifdef TRYANDINC
+    /*
+     * If try and increment fails after `TAI_NR_TRIES` tries, then we run elligator, to ensure that
+     * the function runs correctly.
+     */
+    if (_vrf_ietfdraft09_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen) != 0) {
+        _vrf_ietfdraft03_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
+    };
+#else
     _vrf_ietfdraft09_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
+#endif
     ge25519_frombytes(&H_point, h_string);
 
     ge25519_scalarmult(&Gamma_point, x_scalar, &H_point); /* Gamma = x*H */

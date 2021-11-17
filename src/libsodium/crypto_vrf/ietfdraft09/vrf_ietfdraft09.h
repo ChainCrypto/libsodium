@@ -23,7 +23,11 @@ SOFTWARE.
 #ifndef vrf_ietfdraft09_H
 #define vrf_ietfdraft09_H
 
+#ifdef TRYANDINC
+static const unsigned char SUITE = 0x03; /* ECVRF-ED25519-SHA512-TAI */
+#else
 static const unsigned char SUITE = 0x04; /* ECVRF-ED25519-SHA512-ELL2 */
+#endif
 
 void _vrf_ietfdraft09_point_to_string(unsigned char string[crypto_core_ed25519_BYTES],
                                       const ge25519_p3 *point);

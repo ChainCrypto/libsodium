@@ -8,7 +8,34 @@ typedef struct TestData_ {
     const char proof[2 * crypto_vrf_ietfdraft09_PROOFBYTES + 1];
     const char output[2 * crypto_vrf_ietfdraft09_OUTPUTBYTES + 1];
 } TestData;
-
+#ifdef TRYANDINC
+/*
+ * Test data taken from https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vrf-09#appendix-A.3
+ * Note, however, that the proof `pi` is not as specified in the spec because instead of including
+ * (Gamma || c || s) in the proof string, we include (Gamma || U || V || s). The values of U and V
+ * are taken from the test vectors in the spec.
+ */
+static const TestData test_data[] = {
+        {
+            "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+            "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+            "8657106690b5526245a92b003bb079ccd1a92130477671f6fc01ad16f26f723faef27c725be964c6a9bf4c45ca8e35df258c1878b838f37d9975523f090340715016572f71466c646c119443455d6cb9b952f07d060ec8286d678615d55f954f241fc442e6569e96c462f62b8079b9ed83ff2ee21c90c7c398802fdeebea4001",
+            "90cf1df3b703cce59e2a35b925d411164068269d7b2d29f3301c03dd757876ff66b71dda49d2de59d03450451af026798e8f81cd2e333de5cdf4f3e140fdd8ae",
+        },
+        {
+            "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+            "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c",
+            "f3141cd382dc42909d19ec5110469e4feae18300e94f304590abdced48aed5931dcb0a4821a2c48bf53548228b7f170962988f6d12f5439f31987ef41f034ab3fd03c0bf498c752161bae4719105a074630a2aa5f200ff7b3995f7bfb1513423ab7b1ea44a256e811892e13eeae7c9f6ea8992557453eac11c4d5476b1f35a08",
+            "eb4440665d3891d668e7e0fcaf587f1b4bd7fbfe99d0eb2211ccec90496310eb5e33821bc613efb94db5e5b54c70a848a0bef4553a41befc57663b56373a5031",
+        },
+        {
+            "c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7",
+            "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025",
+            "9bc0f79119cc5604bf02d23b4caede71393cedfbb191434dd016d30177ccbf802bae73e15a64042fcebf062abe7e432b2eca6744f3e8265bc38e009cd577ecd588cba1cb0d4f9b649d9a86026b69de076724a93a65c349c988954f0961c5d506d08a6c3e3665ff5a4cab13a643bef812e284c6b2ee063a2cb4f456794723ad0a",
+            "645427e5d00c62a23fb703732fa5d892940935942101e456ecca7bb217c61c452118fec1219202a0edcf038bb6373241578be7217ba85a2687f7a0310b2df19f",
+        }
+};
+#else
 /*
  * Test data taken from https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vrf-09#appendix-A.4
  * Note, however, that the proof `pi` is not as specified in the spec because instead of including
@@ -35,6 +62,7 @@ static const TestData test_data[] = {
             "121b7f9b9aaaa29099fc04a94ba52784d44eac976dd1a3cca458733be5cd090a7b5fbd148444f17f8daf1fb55cb04b1ae85a626e30a54b4b0f8abf4a43314a58",
         }
 };
+#endif
 
 static const unsigned char messages[3][2] = {{0x00}, {0x72}, {0xaf, 0x82}};
 

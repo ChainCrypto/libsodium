@@ -140,7 +140,17 @@ vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraf
     memset(s_scalar+crypto_core_ed25519_SCALARBYTES, 0, crypto_core_ed25519_SCALARBYTES);
     sc25519_reduce(s_scalar);
 
+#ifdef TRYANDINC
+    /*
+     * If try and increment fails after `TAI_NR_TRIES` tries, then we run elligator, to ensure that
+     * the function runs correctly.
+     */
+    if (_vrf_ietfdraft09_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen) != 0) {
+        _vrf_ietfdraft03_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
+    };
+#else
     _vrf_ietfdraft09_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
+#endif
     ge25519_frombytes(&H_point, h_string);
 
     _vrf_ietfdraft09_hash_points(c_scalar, &H_point, &Gamma_point, expected_U_bytes, expected_V_bytes);
