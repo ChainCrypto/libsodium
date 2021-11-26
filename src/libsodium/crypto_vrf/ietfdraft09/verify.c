@@ -62,20 +62,23 @@ crypto_vrf_ietfdraft09_proof_to_hash(unsigned char beta[crypto_vrf_ietfdraft09_O
 {
     ge25519_p3    Gamma_point;
     unsigned char s_scalar[crypto_core_ed25519_SCALARBYTES], U_point[crypto_core_ed25519_BYTES], V_point[crypto_core_ed25519_BYTES];
-    unsigned char hash_input[3+crypto_core_ed25519_BYTES];
+    unsigned char gamma_string[crypto_core_ed25519_BYTES];
 
     /* (Gamma, c, s) = ECVRF_decode_proof(pi_string) */
     if (_vrf_ietfdraft09_decode_proof(&Gamma_point, U_point, V_point, s_scalar, pi) != 0) {
         return -1;
     }
-
-    /* beta_string = Hash(suite_string || three_string || point_to_string(cofactor * Gamma)) */
-    hash_input[0] = SUITE;
-    hash_input[1] = THREE;
     multiply_by_cofactor(&Gamma_point);
-    _vrf_ietfdraft09_point_to_string(hash_input+2, &Gamma_point);
-    hash_input[crypto_core_ed25519_BYTES + 2] = ZERO;
-    crypto_hash_sha512(beta, hash_input, sizeof hash_input);
+    _vrf_ietfdraft09_point_to_string(gamma_string, &Gamma_point);
+
+    /* beta_string = Hash(suite_string || three_string || point_to_string(cofactor * Gamma) || zero_string ) */
+    crypto_hash_sha512_state hs;
+    crypto_hash_sha512_init(&hs);
+    crypto_hash_sha512_update(&hs, &SUITE, 1);
+    crypto_hash_sha512_update(&hs, &THREE, 1);
+    crypto_hash_sha512_update(&hs, gamma_string, crypto_core_ed25519_BYTES);
+    crypto_hash_sha512_update(&hs, &ZERO, 1);
+    crypto_hash_sha512_final(&hs, beta);
 
     return 0;
 }
