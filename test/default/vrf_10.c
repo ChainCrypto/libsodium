@@ -1,12 +1,12 @@
 
-#define TEST_NAME "vrf_09"
+#define TEST_NAME "vrf_10"
 #include "cmptest.h"
 
 typedef struct TestData_ {
-    const char seed[2 * crypto_vrf_ietfdraft09_SEEDBYTES + 1];
-    const char pk[2 * crypto_vrf_ietfdraft09_PUBLICKEYBYTES + 1];
-    const char proof[2 * crypto_vrf_ietfdraft09_PROOFBYTES + 1];
-    const char output[2 * crypto_vrf_ietfdraft09_OUTPUTBYTES + 1];
+    const char seed[2 * crypto_vrf_ietfdraft10_SEEDBYTES + 1];
+    const char pk[2 * crypto_vrf_ietfdraft10_PUBLICKEYBYTES + 1];
+    const char proof[2 * crypto_vrf_ietfdraft10_PROOFBYTES + 1];
+    const char output[2 * crypto_vrf_ietfdraft10_OUTPUTBYTES + 1];
 } TestData;
 #ifdef TRYANDINC
 /*
@@ -78,90 +78,90 @@ static inline void printhex(const char *label, const unsigned char *c, size_t le
 int main(void)
 {
     unsigned char *seed, *expected_pk, *expected_proof, *expected_output;
-    seed            = (unsigned char *) sodium_malloc(crypto_vrf_ietfdraft09_SEEDBYTES);
-    expected_pk     = (unsigned char *) sodium_malloc(crypto_vrf_ietfdraft09_PUBLICKEYBYTES);
-    expected_proof  = (unsigned char *) sodium_malloc(crypto_vrf_ietfdraft09_PROOFBYTES);
-    expected_output = (unsigned char *) sodium_malloc(crypto_vrf_ietfdraft09_OUTPUTBYTES);
+    seed            = (unsigned char *) sodium_malloc(crypto_vrf_ietfdraft10_SEEDBYTES);
+    expected_pk     = (unsigned char *) sodium_malloc(crypto_vrf_ietfdraft10_PUBLICKEYBYTES);
+    expected_proof  = (unsigned char *) sodium_malloc(crypto_vrf_ietfdraft10_PROOFBYTES);
+    expected_output = (unsigned char *) sodium_malloc(crypto_vrf_ietfdraft10_OUTPUTBYTES);
 
-    unsigned char sk[crypto_vrf_ietfdraft09_SECRETKEYBYTES];
-    unsigned char pk[crypto_vrf_ietfdraft09_PUBLICKEYBYTES];
-    unsigned char proof[crypto_vrf_ietfdraft09_PROOFBYTES];
-    unsigned char output[crypto_vrf_ietfdraft09_OUTPUTBYTES];
+    unsigned char sk[crypto_vrf_ietfdraft10_SECRETKEYBYTES];
+    unsigned char pk[crypto_vrf_ietfdraft10_PUBLICKEYBYTES];
+    unsigned char proof[crypto_vrf_ietfdraft10_PROOFBYTES];
+    unsigned char output[crypto_vrf_ietfdraft10_OUTPUTBYTES];
 
     unsigned int i;
-    assert(crypto_vrf_ietfdraft09_SECRETKEYBYTES == 64);
-    assert(crypto_vrf_ietfdraft09_PUBLICKEYBYTES == 32);
-    assert(crypto_vrf_ietfdraft09_SEEDBYTES == 32);
-    assert(crypto_vrf_ietfdraft09_PROOFBYTES == 128);
-    assert(crypto_vrf_ietfdraft09_OUTPUTBYTES == 64);
+    assert(crypto_vrf_ietfdraft10_SECRETKEYBYTES == 64);
+    assert(crypto_vrf_ietfdraft10_PUBLICKEYBYTES == 32);
+    assert(crypto_vrf_ietfdraft10_SEEDBYTES == 32);
+    assert(crypto_vrf_ietfdraft10_PROOFBYTES == 128);
+    assert(crypto_vrf_ietfdraft10_OUTPUTBYTES == 64);
 
     for (i = 0U; i < (sizeof test_data) / (sizeof test_data[0]); i++) {
-        sodium_hex2bin(seed, crypto_vrf_ietfdraft09_SEEDBYTES,
+        sodium_hex2bin(seed, crypto_vrf_ietfdraft10_SEEDBYTES,
                        test_data[i].seed, (size_t) -1U, NULL, NULL, NULL);
-        sodium_hex2bin(expected_pk, crypto_vrf_ietfdraft09_PUBLICKEYBYTES,
+        sodium_hex2bin(expected_pk, crypto_vrf_ietfdraft10_PUBLICKEYBYTES,
                        test_data[i].pk, (size_t) -1U, NULL, NULL, NULL);
-        sodium_hex2bin(expected_proof, crypto_vrf_ietfdraft09_PROOFBYTES,
+        sodium_hex2bin(expected_proof, crypto_vrf_ietfdraft10_PROOFBYTES,
                        test_data[i].proof, (size_t) -1U, NULL, NULL, NULL);
-        sodium_hex2bin(expected_output, crypto_vrf_ietfdraft09_OUTPUTBYTES,
+        sodium_hex2bin(expected_output, crypto_vrf_ietfdraft10_OUTPUTBYTES,
                        test_data[i].output, (size_t) -1U, NULL, NULL, NULL);
 
-        crypto_vrf_ietfdraft09_keypair_from_seed(pk, sk, seed);
-        if (memcmp(pk, expected_pk, crypto_vrf_ietfdraft09_PUBLICKEYBYTES) != 0){
+        crypto_vrf_ietfdraft10_keypair_from_seed(pk, sk, seed);
+        if (memcmp(pk, expected_pk, crypto_vrf_ietfdraft10_PUBLICKEYBYTES) != 0){
             printf("keypair_from_seed produced wrong pk: [%u]\n", i);
-            printhex("\tWanted: ", expected_pk, crypto_vrf_ietfdraft09_PUBLICKEYBYTES);
-            printhex("\tGot:    ", pk, crypto_vrf_ietfdraft09_PUBLICKEYBYTES);
+            printhex("\tWanted: ", expected_pk, crypto_vrf_ietfdraft10_PUBLICKEYBYTES);
+            printhex("\tGot:    ", pk, crypto_vrf_ietfdraft10_PUBLICKEYBYTES);
         }
-        if (!crypto_vrf_ietfdraft09_is_valid_key(pk)) {
+        if (!crypto_vrf_ietfdraft10_is_valid_key(pk)) {
             printf("crypto_vrf_is_valid_key() error: [%u]\n", i);
         }
-        if (crypto_vrf_ietfdraft09_prove(proof, sk, messages[i], i) != 0){
+        if (crypto_vrf_ietfdraft10_prove(proof, sk, messages[i], i) != 0){
             printf("crypto_vrf_prove() error: [%u]\n", i);
         }
-        if (memcmp(expected_proof, proof, crypto_vrf_ietfdraft09_PROOFBYTES) != 0){
+        if (memcmp(expected_proof, proof, crypto_vrf_ietfdraft10_PROOFBYTES) != 0){
             printf("proof error: [%u]\n", i);
-            printhex("\tWanted: ", expected_proof, crypto_vrf_ietfdraft09_PROOFBYTES);
-            printhex("\tGot:    ", proof, crypto_vrf_ietfdraft09_PROOFBYTES);
+            printhex("\tWanted: ", expected_proof, crypto_vrf_ietfdraft10_PROOFBYTES);
+            printhex("\tGot:    ", proof, crypto_vrf_ietfdraft10_PROOFBYTES);
         }
-        if (crypto_vrf_ietfdraft09_verify(output, expected_pk, proof, messages[i], i) != 0){
+        if (crypto_vrf_ietfdraft10_verify(output, expected_pk, proof, messages[i], i) != 0){
             printf("verify error: [%u]\n", i);
         }
-        if (memcmp(output, expected_output, crypto_vrf_ietfdraft09_OUTPUTBYTES) != 0){
+        if (memcmp(output, expected_output, crypto_vrf_ietfdraft10_OUTPUTBYTES) != 0){
             printf("output wrong: [%u]\n", i);
-            printhex("\tWanted: ", expected_output, crypto_vrf_ietfdraft09_OUTPUTBYTES);
-            printhex("\tGot:    ", output, crypto_vrf_ietfdraft09_OUTPUTBYTES);
+            printhex("\tWanted: ", expected_output, crypto_vrf_ietfdraft10_OUTPUTBYTES);
+            printhex("\tGot:    ", output, crypto_vrf_ietfdraft10_OUTPUTBYTES);
         }
 
         proof[0] ^= 0x01;
-        if (crypto_vrf_ietfdraft09_verify(output, expected_pk, proof, messages[i], i) == 0){
+        if (crypto_vrf_ietfdraft10_verify(output, expected_pk, proof, messages[i], i) == 0){
             printf("verify succeeded with bad gamma: [%u]\n", i);
         }
         proof[0] ^= 0x01;
         proof[32] ^= 0x01;
-        if (crypto_vrf_ietfdraft09_verify(output, expected_pk, proof, messages[i], i) == 0){
+        if (crypto_vrf_ietfdraft10_verify(output, expected_pk, proof, messages[i], i) == 0){
             printf("verify succeeded with bad c value: [%u]\n", i);
         }
         proof[32] ^= 0x01;
         proof[48] ^= 0x01;
-        if (crypto_vrf_ietfdraft09_verify(output, expected_pk, proof, messages[i], i) == 0){
+        if (crypto_vrf_ietfdraft10_verify(output, expected_pk, proof, messages[i], i) == 0){
             printf("verify succeeded with bad s value: [%u]\n", i);
         }
         proof[48] ^= 0x01;
         proof[79] ^= 0x80;
-        if (crypto_vrf_ietfdraft09_verify(output, expected_pk, proof, messages[i], i) == 0){
+        if (crypto_vrf_ietfdraft10_verify(output, expected_pk, proof, messages[i], i) == 0){
             printf("verify succeeded with bad s value (high-order-bit flipped): [%u]\n", i);
         }
         proof[79] ^= 0x80;
 
         if (i > 0) {
-            if (crypto_vrf_ietfdraft09_verify(output, expected_pk, proof, messages[i], i-1) == 0){
+            if (crypto_vrf_ietfdraft10_verify(output, expected_pk, proof, messages[i], i-1) == 0){
                 printf("verify succeeded with truncated message: [%u]\n", i);
             }
         }
 
-        if (crypto_vrf_ietfdraft09_proof_to_hash(output, proof) != 0){
+        if (crypto_vrf_ietfdraft10_proof_to_hash(output, proof) != 0){
             printf("crypto_vrf_proof_to_hash() error: [%u]\n", i);
         }
-        if (memcmp(output, expected_output, crypto_vrf_ietfdraft09_OUTPUTBYTES) != 0){
+        if (memcmp(output, expected_output, crypto_vrf_ietfdraft10_OUTPUTBYTES) != 0){
             printf("output wrong: [%u]\n", i);
         }
     }
