@@ -27,9 +27,15 @@ size_t crypto_vrf_ietfdraft10_secretkeybytes(void);
 SODIUM_EXPORT
 size_t crypto_vrf_ietfdraft10_seedbytes(void);
 
-#define crypto_vrf_ietfdraft10_PROOFBYTES 128U
+#define crypto_vrf_ietfdraft10_PROOFBYTES 80U
+
 SODIUM_EXPORT
 size_t crypto_vrf_ietfdraft10_proofbytes(void);
+
+#define crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT 128U
+
+SODIUM_EXPORT
+size_t crypto_vrf_ietfdraft10_proofbytes_batchcompat(void);
 
 #define crypto_vrf_ietfdraft10_OUTPUTBYTES 64U
 SODIUM_EXPORT
@@ -84,6 +90,19 @@ int crypto_vrf_ietfdraft10_prove(unsigned char *proof, const unsigned char *sk,
                                  const unsigned char *m,
                                  unsigned long long mlen);
 
+// Generate a batch compatible VRF proof for a message using a secret key.
+//
+// The VRF output hash can be obtained by calling crypto_vrf_proof_to_hash_batchcompatible(proof).
+//
+// Returns 0 on success, -1 on error decoding the (augmented) secret key
+//
+// This runs in time constant with respect to sk and, fixing a value of mlen,
+// runs in time constant with respect to m.
+SODIUM_EXPORT
+int crypto_vrf_ietfdraft10_prove_batchcompat(unsigned char *proof, const unsigned char *sk,
+                                 const unsigned char *m,
+                                 unsigned long long mlen);
+
 // Verify a VRF proof (for a given a public key and message) and validate the
 // public key.
 //
@@ -100,6 +119,22 @@ int crypto_vrf_ietfdraft10_verify(unsigned char *output,
                                   unsigned long long mlen)
 __attribute__ ((warn_unused_result));
 
+// Verify a batch compatible VRF proof (for a given a public key and message) and validate the
+// public key.
+//
+// For a given public key and message, there are many possible proofs but only
+// one possible output hash.
+//
+// Returns 0 if verification succeeds and -1 on failure. If the public key is
+// valid and verification succeeds, the output hash is stored in output.
+SODIUM_EXPORT
+int crypto_vrf_ietfdraft10_verify_batchcompat(unsigned char *output,
+                                  const unsigned char *pk,
+                                  const unsigned char *proof,
+                                  const unsigned char *m,
+                                  unsigned long long mlen)
+__attribute__ ((warn_unused_result));
+
 // Convert a VRF proof to a VRF output.
 //
 // This function does not verify the proof.
@@ -107,6 +142,15 @@ __attribute__ ((warn_unused_result));
 // Returns 0 on success, nonzero on error decoding.
 SODIUM_EXPORT
 int crypto_vrf_ietfdraft10_proof_to_hash(unsigned char *hash,
+                                         const unsigned char *proof);
+
+// Convert a batch compatible VRF proof to a VRF output.
+//
+// This function does not verify the proof.
+//
+// Returns 0 on success, nonzero on error decoding.
+SODIUM_EXPORT
+int crypto_vrf_ietfdraft10_proof_to_hash_batchcompat(unsigned char *hash,
                                          const unsigned char *proof);
 
 // Convert a secret key to a public key.

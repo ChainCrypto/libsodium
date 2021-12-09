@@ -35,8 +35,11 @@ void _vrf_ietfdraft10_point_to_string(unsigned char string[crypto_core_ed25519_B
 int _vrf_ietfdraft10_string_to_point(ge25519_p3 *point,
                                      const unsigned char string[crypto_core_ed25519_BYTES]);
 
-int _vrf_ietfdraft10_decode_proof(ge25519_p3 *Gamma, unsigned char U[crypto_core_ed25519_BYTES], unsigned char V[crypto_core_ed25519_BYTES],
-                                  unsigned char s[crypto_core_ed25519_SCALARBYTES], const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES]);
+int _vrf_ietfdraft10_decode_proof(ge25519_p3 *Gamma, unsigned char c[16],
+                              unsigned char s[crypto_core_ed25519_SCALARBYTES], const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES]);
+
+int _vrf_ietfdraft10_decode_proof_batchcompat(ge25519_p3 *Gamma, unsigned char U[crypto_core_ed25519_BYTES], unsigned char V[crypto_core_ed25519_BYTES],
+                                  unsigned char s[crypto_core_ed25519_SCALARBYTES], const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT]);
 
 void
 _vrf_ietfdraft10_hash_to_curve_elligator2_25519(unsigned char H_string[crypto_core_ed25519_BYTES],

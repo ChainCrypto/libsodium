@@ -47,6 +47,12 @@ crypto_vrf_ietfdraft10_proofbytes(void)
 }
 
 size_t
+crypto_vrf_ietfdraft10_proofbytes_batchcompat(void)
+{
+    return crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT;
+}
+
+size_t
 crypto_vrf_ietfdraft10_outputbytes(void)
 {
     return crypto_vrf_ietfdraft10_OUTPUTBYTES;

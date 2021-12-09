@@ -76,26 +76,17 @@ vrf_nonce_generation(unsigned char k_scalar[crypto_core_ed25519_SCALARBYTES],
 
     sodium_memzero(k_string, sizeof k_string);
 }
+static void produce_proof(ge25519_p3 *Gamma_point, unsigned char kB_bytes[crypto_core_ed25519_BYTES], unsigned char kH_bytes[crypto_core_ed25519_BYTES],
+                          unsigned char c_scalar[crypto_core_ed25519_SCALARBYTES],
+                          unsigned char s_scalar[crypto_core_ed25519_SCALARBYTES],
+                          const ge25519_p3 *Y_point,
+                          const unsigned char x_scalar[crypto_core_ed25519_SCALARBYTES],
+                          const unsigned char truncated_hashed_sk_string[32],
+                          const unsigned char *alpha, unsigned long long alphalen) {
 
-/* Construct a proof for a message alpha per draft spec section 5.1.
- * Takes in a secret scalar x, a public point Y, and a secret string
- * truncated_hashed_sk that is used in nonce generation.
- * These are computed from the secret key using the expand_sk function.
- * Constant time in everything except alphalen (the length of the message).
- *
- * The proof contains the two points U and V instead of the challenge
- * to allow for batch-verification.
- */
-static void
-vrf_prove(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES], const ge25519_p3 *Y_point,
-          const unsigned char x_scalar[crypto_core_ed25519_SCALARBYTES],
-          const unsigned char truncated_hashed_sk_string[32],
-          const unsigned char *alpha, unsigned long long alphalen)
-{
-    /* c fits in 16 bytes, but we store it in a 32-byte array because
-     * sc25519_muladd expects a 32-byte scalar */
-    unsigned char h_string[crypto_core_ed25519_BYTES], k_scalar[crypto_core_ed25519_SCALARBYTES], c_scalar[crypto_core_ed25519_SCALARBYTES];
-    ge25519_p3    H_point, Gamma_point, kB_point, kH_point;
+
+    unsigned char h_string[crypto_core_ed25519_BYTES], k_scalar[crypto_core_ed25519_SCALARBYTES];
+    ge25519_p3    H_point, kB_point, kH_point;
 
 #ifdef TRYANDINC
     /*
@@ -110,7 +101,7 @@ vrf_prove(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES], const ge25519_p3 
 #endif
     ge25519_frombytes(&H_point, h_string);
 
-    ge25519_scalarmult(&Gamma_point, x_scalar, &H_point); /* Gamma = x*H */
+    ge25519_scalarmult(Gamma_point, x_scalar, &H_point); /* Gamma = x*H */
     vrf_nonce_generation(k_scalar, truncated_hashed_sk_string, h_string);
     ge25519_scalarmult_base(&kB_point, k_scalar); /* compute k*B */
     ge25519_scalarmult(&kH_point, k_scalar, &H_point); /* compute k*H */
@@ -120,27 +111,76 @@ vrf_prove(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES], const ge25519_p3 
      * We need to pass kB and kH to bytes for the new
      * function signature
      * */
-    unsigned char kB_bytes[crypto_core_ed25519_BYTES], kH_bytes[crypto_core_ed25519_BYTES];
     ge25519_p3_tobytes(kB_bytes, &kB_point);
     ge25519_p3_tobytes(kH_bytes, &kH_point);
 
-    _vrf_ietfdraft10_hash_points(c_scalar, &H_point, &Gamma_point, kB_bytes, kH_bytes);
+    _vrf_ietfdraft10_hash_points(c_scalar, &H_point, Gamma_point, kB_bytes, kH_bytes);
     memset(c_scalar+16, 0, 16); /* zero the remaining 16 bytes of c_scalar */
+
+    sc25519_muladd(s_scalar, c_scalar, x_scalar, k_scalar); /* pi[48:80] = s = c*x + k (mod q) */
+    sodium_memzero(k_scalar, sizeof k_scalar); /* k must remain secret */
+    sodium_memzero(h_string, sizeof h_string);
+    sodium_memzero(&H_point, sizeof H_point);
+}
+/* Construct a proof for a message alpha per draft spec section 5.1.
+ * Takes in a secret scalar x, a public point Y, and a secret string
+ * truncated_hashed_sk that is used in nonce generation.
+ * These are computed from the secret key using the expand_sk function.
+ * Constant time in everything except alphalen (the length of the message).
+ */
+static void
+vrf_prove(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES], const ge25519_p3 *Y_point,
+          const unsigned char x_scalar[crypto_core_ed25519_SCALARBYTES],
+          const unsigned char truncated_hashed_sk_string[32],
+          const unsigned char *alpha, unsigned long long alphalen)
+{
+    unsigned char s_scalar[crypto_core_ed25519_SCALARBYTES], c_scalar[crypto_core_ed25519_SCALARBYTES], kB_bytes[crypto_core_ed25519_BYTES], kH_bytes[crypto_core_ed25519_BYTES];
+    ge25519_p3    Gamma_point;
+
+    produce_proof(&Gamma_point, kB_bytes, kH_bytes, c_scalar, s_scalar, Y_point, x_scalar, truncated_hashed_sk_string, alpha, alphalen);
 
     /* output pi */
     _vrf_ietfdraft10_point_to_string(pi, &Gamma_point); /* pi[0:32] = point_to_string(Gamma) */
+    memmove(pi + crypto_core_ed25519_BYTES, c_scalar, 16); /* pi[32:48] = c_scalar */
+    memmove(pi + crypto_core_ed25519_BYTES + 16, s_scalar, crypto_core_ed25519_SCALARBYTES);
+
+    sodium_memzero(&s_scalar, sizeof s_scalar);/*s must remain secret*/
+    sodium_memzero(&Gamma_point, sizeof Gamma_point);
+    sodium_memzero(&kB_bytes, sizeof kB_bytes);
+    sodium_memzero(&kH_bytes, sizeof kH_bytes);
+    sodium_memzero(&c_scalar, sizeof c_scalar);
+}
+
+/* Construct a batch compatible proof for a message alpha.
+ * Takes in a secret scalar x, a public point Y, and a secret string
+ * truncated_hashed_sk that is used in nonce generation.
+ * These are computed from the secret key using the expand_sk function.
+ * Constant time in everything except alphalen (the length of the message).
+ *
+ * The proof contains the two points U and V instead of the challenge
+ * to allow for batch-verification.
+ */
+static void
+vrf_prove_batchcompat(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT], const ge25519_p3 *Y_point,
+          const unsigned char x_scalar[crypto_core_ed25519_SCALARBYTES],
+          const unsigned char truncated_hashed_sk_string[32],
+          const unsigned char *alpha, unsigned long long alphalen)
+{
+    unsigned char s_scalar[crypto_core_ed25519_SCALARBYTES], c_scalar[crypto_core_ed25519_SCALARBYTES], kB_bytes[crypto_core_ed25519_BYTES], kH_bytes[crypto_core_ed25519_BYTES];
+    ge25519_p3    Gamma_point;
+
+    produce_proof(&Gamma_point, kB_bytes, kH_bytes, c_scalar, s_scalar, Y_point, x_scalar, truncated_hashed_sk_string, alpha, alphalen);
+
+    _vrf_ietfdraft10_point_to_string(pi, &Gamma_point); /* pi[0:32] = point_to_string(Gamma) */
     memmove(pi + crypto_core_ed25519_BYTES, kB_bytes, crypto_core_ed25519_BYTES); /* pi[32:64] = point_to_string(kB_point) */
     memmove(pi + (crypto_core_ed25519_BYTES * 2), kH_bytes, crypto_core_ed25519_BYTES); /* pi[64:96] = point_to_string(kH_point) */
-    sc25519_muladd(pi + (crypto_core_ed25519_BYTES * 3), c_scalar, x_scalar, k_scalar); /* pi[96:128] = s = c*x + k (mod q) */
+    memmove(pi + (crypto_core_ed25519_BYTES * 3), s_scalar, crypto_core_ed25519_SCALARBYTES);
 
-    sodium_memzero(k_scalar, sizeof k_scalar); /* k must remain secret */
-    /* erase other non-sensitive intermediate state for good measure */
-    sodium_memzero(h_string, sizeof h_string);
-    sodium_memzero(c_scalar, sizeof c_scalar);
-    sodium_memzero(&H_point, sizeof H_point);
+    sodium_memzero(&s_scalar, sizeof s_scalar);/*s must remain secret*/
     sodium_memzero(&Gamma_point, sizeof Gamma_point);
-    sodium_memzero(&kB_point, sizeof kB_point);
-    sodium_memzero(&kH_point, sizeof kH_point);
+    sodium_memzero(&kB_bytes, sizeof kB_bytes);
+    sodium_memzero(&kH_bytes, sizeof kH_bytes);
+    sodium_memzero(&c_scalar, sizeof c_scalar);
 }
 
 /* Construct a VRF proof given a secret key and a message.
@@ -170,6 +210,39 @@ crypto_vrf_ietfdraft10_prove(unsigned char proof[crypto_vrf_ietfdraft10_PROOFBYT
         return -1;
     }
     vrf_prove(proof, &Y_point, x_scalar, truncated_hashed_sk_string, msg, msglen);
+    sodium_memzero(x_scalar, crypto_core_ed25519_SCALARBYTES);
+    sodium_memzero(truncated_hashed_sk_string, 32);
+    sodium_memzero(&Y_point, sizeof Y_point); /* for good measure */
+    return 0;
+}
+
+/* Construct a batch compatible VRF proof given a secret key and a message.
+ *
+ * The "secret key" is 64 bytes long -- 32 byte secret seed concatenated
+ * with 32 byte precomputed public key. Our keygen functions return secret keys
+ * of this form.
+ *
+ * Returns 0 on success, nonzero on failure decoding the public key.
+ *
+ * Constant time in everything except msglen, unless decoding the public key
+ * fails.
+ */
+int
+crypto_vrf_ietfdraft10_prove_batchcompat(unsigned char proof[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT],
+                             const unsigned char skpk[crypto_vrf_ietfdraft10_SECRETKEYBYTES],
+                             const unsigned char *msg,
+                             unsigned long long msglen)
+{
+    ge25519_p3    Y_point;
+    unsigned char x_scalar[crypto_core_ed25519_SCALARBYTES], truncated_hashed_sk_string[32];
+
+    if (vrf_expand_sk(&Y_point, x_scalar, truncated_hashed_sk_string, skpk) != 0) {
+        sodium_memzero(x_scalar, crypto_core_ed25519_SCALARBYTES);
+        sodium_memzero(truncated_hashed_sk_string, 32);
+        sodium_memzero(&Y_point, sizeof Y_point); /* for good measure */
+        return -1;
+    }
+    vrf_prove_batchcompat(proof, &Y_point, x_scalar, truncated_hashed_sk_string, msg, msglen);
     sodium_memzero(x_scalar, crypto_core_ed25519_SCALARBYTES);
     sodium_memzero(truncated_hashed_sk_string, 32);
     sodium_memzero(&Y_point, sizeof Y_point); /* for good measure */
