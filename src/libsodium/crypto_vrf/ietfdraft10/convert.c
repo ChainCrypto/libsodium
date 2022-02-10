@@ -173,7 +173,7 @@ _vrf_ietfdraft10_hash_points(unsigned char c[16], const ge25519_p3 *P1,
  */
 int
 _vrf_ietfdraft10_decode_proof(ge25519_p3 *Gamma, unsigned char c[16],
-                              unsigned char s[32], const unsigned char pi[80])
+                              unsigned char s[crypto_core_ed25519_SCALARBYTES], const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES])
 {
     /* gamma = decode_point(pi[0:32]) */
     if (_vrf_ietfdraft10_string_to_point(Gamma, pi) != 0) {
@@ -190,8 +190,8 @@ _vrf_ietfdraft10_decode_proof(ge25519_p3 *Gamma, unsigned char c[16],
     return 0;
 }
 
-/* Decode an 128-byte batch-compatible proof pi into a point gamma, a point U, a point V, and a
- * 32-byte scalar s, as specified in IETF draft section 5.4.4.
+/* Decode an 128-byte batch-compatible proof pi into a point gamma, byte string representation of a point U,
+ * byte string representation of a point V, and a  * 32-byte scalar s, as specified in IETF draft section 5.4.4.
  * Verifier checks whether `s` is canonical.
  * Returns 0 on success, nonzero on failure.
  */

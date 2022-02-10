@@ -105,9 +105,9 @@ crypto_vrf_ietfdraft10_proof_to_hash_batchcompat(unsigned char beta[crypto_vrf_i
     unsigned char s_scalar[crypto_core_ed25519_SCALARBYTES];
     unsigned char gamma_string[crypto_core_ed25519_BYTES];
 
-    unsigned char U_point[crypto_core_ed25519_BYTES], V_point[crypto_core_ed25519_BYTES];
+    unsigned char U_bytes[crypto_core_ed25519_BYTES], V_bytes[crypto_core_ed25519_BYTES];
     /* (Gamma, U, V, s) = ECVRF_decode_proof(pi_string) */
-    if (_vrf_ietfdraft10_decode_proof_batchcompat(&Gamma_point, U_point, V_point, s_scalar, pi) != 0) {
+    if (_vrf_ietfdraft10_decode_proof_batchcompat(&Gamma_point, U_bytes, V_bytes, s_scalar, pi) != 0) {
         return -1;
     }
 

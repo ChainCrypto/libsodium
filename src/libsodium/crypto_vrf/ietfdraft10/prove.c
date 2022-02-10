@@ -111,8 +111,8 @@ static void produce_proof(ge25519_p3 *Gamma_point, unsigned char kB_bytes[crypto
      * We need to pass kB and kH to bytes for the new
      * function signature
      * */
-    ge25519_p3_tobytes(kB_bytes, &kB_point);
-    ge25519_p3_tobytes(kH_bytes, &kH_point);
+    _vrf_ietfdraft10_point_to_string(kB_bytes, &kB_point);
+    _vrf_ietfdraft10_point_to_string(kH_bytes, &kH_point);
 
     _vrf_ietfdraft10_hash_points(c_scalar, &H_point, Gamma_point, kB_bytes, kH_bytes);
     memset(c_scalar+16, 0, 16); /* zero the remaining 16 bytes of c_scalar */

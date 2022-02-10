@@ -11,7 +11,7 @@
 #define HASH_BYTES      crypto_hash_sha256_BYTES
 #define HASH_BLOCKBYTES 64U
 
-static int
+static void
 core_h2c_string_to_hash_sha256(unsigned char *h, const size_t h_len, const char *ctx,
                                const unsigned char *msg, size_t msg_len)
 {
@@ -58,7 +58,6 @@ core_h2c_string_to_hash_sha256(unsigned char *h, const size_t h_len, const char 
         crypto_hash_sha256_final(&st, ux);
         memcpy(&h[i], ux, h_len - i >= (sizeof ux) ? (sizeof ux) : h_len - i);
     }
-    return 0;
 }
 
 #undef  HASH_BYTES
@@ -67,7 +66,7 @@ core_h2c_string_to_hash_sha256(unsigned char *h, const size_t h_len, const char 
 #define HASH_BYTES      crypto_hash_sha512_BYTES
 #define HASH_BLOCKBYTES 128U
 
-static int
+static void
 core_h2c_string_to_hash_sha512(unsigned char *h, const size_t h_len, const char *ctx,
                                const unsigned char *msg, size_t msg_len)
 {
@@ -114,7 +113,6 @@ core_h2c_string_to_hash_sha512(unsigned char *h, const size_t h_len, const char 
         crypto_hash_sha512_final(&st, ux);
         memcpy(&h[i], ux, h_len - i >= (sizeof ux) ? (sizeof ux) : h_len - i);
     }
-    return 0;
 }
 
 int
@@ -123,9 +121,11 @@ core_h2c_string_to_hash(unsigned char *h, const size_t h_len, const char *ctx,
 {
     switch (hash_alg) {
     case CORE_H2C_SHA256:
-        return core_h2c_string_to_hash_sha256(h, h_len, ctx, msg, msg_len);
+        core_h2c_string_to_hash_sha256(h, h_len, ctx, msg, msg_len);
+        return 0;
     case CORE_H2C_SHA512:
-        return core_h2c_string_to_hash_sha512(h, h_len, ctx, msg, msg_len);
+        core_h2c_string_to_hash_sha512(h, h_len, ctx, msg, msg_len);
+        return 0;
     default:
         errno = EINVAL;
         return -1;
