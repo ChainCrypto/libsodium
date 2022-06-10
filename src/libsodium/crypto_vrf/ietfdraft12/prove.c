@@ -24,10 +24,10 @@ SOFTWARE.
 #include <stdlib.h>
 
 #include "crypto_hash_sha512.h"
-#include "crypto_vrf_ietfdraft10.h"
+#include "crypto_vrf_ietfdraft12.h"
 #include "private/ed25519_ref10.h"
 #include "utils.h"
-#include "vrf_ietfdraft10.h"
+#include "vrf_ietfdraft12.h"
 
 /* Utility function to convert a "secret key" (32-byte seed || 32-byte PK)
  * into the public point Y, the private saclar x, and truncated hash of the
@@ -36,11 +36,11 @@ SOFTWARE.
  */
 static int
 vrf_expand_sk(ge25519_p3 *Y_point, unsigned char x_scalar[crypto_core_ed25519_SCALARBYTES],
-              unsigned char truncated_hashed_sk_string[32], const unsigned char skpk[crypto_vrf_ietfdraft10_SECRETKEYBYTES])
+              unsigned char truncated_hashed_sk_string[32], const unsigned char skpk[crypto_vrf_ietfdraft12_SECRETKEYBYTES])
 {
     unsigned char h[crypto_hash_sha512_BYTES];
 
-    crypto_hash_sha512(h, skpk, crypto_vrf_ietfdraft10_SEEDBYTES);
+    crypto_hash_sha512(h, skpk, crypto_vrf_ietfdraft12_SEEDBYTES);
     h[0] &= 248;
     h[31] &= 127;
     h[31] |= 64;
@@ -48,7 +48,7 @@ vrf_expand_sk(ge25519_p3 *Y_point, unsigned char x_scalar[crypto_core_ed25519_SC
     memmove(truncated_hashed_sk_string, h + crypto_core_ed25519_SCALARBYTES, 32);
     sodium_memzero(h, crypto_hash_sha512_BYTES);
 
-    return _vrf_ietfdraft10_string_to_point(Y_point, skpk+crypto_vrf_ietfdraft10_SEEDBYTES);
+    return _vrf_ietfdraft12_string_to_point(Y_point, skpk+crypto_vrf_ietfdraft12_SEEDBYTES);
 }
 
 
@@ -93,11 +93,11 @@ static void produce_proof(ge25519_p3 *Gamma_point, unsigned char kB_bytes[crypto
      * If try and increment fails after `TAI_NR_TRIES` tries, then we run elligator, to ensure that
      * the function runs correctly.
      */
-    if (_vrf_ietfdraft10_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen) != 0) {
+    if (_vrf_ietfdraft12_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen) != 0) {
         _vrf_ietfdraft03_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
     };
 #else
-    _vrf_ietfdraft10_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
+    _vrf_ietfdraft12_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
 #endif
     ge25519_frombytes(&H_point, h_string);
 
@@ -106,15 +106,15 @@ static void produce_proof(ge25519_p3 *Gamma_point, unsigned char kB_bytes[crypto
     ge25519_scalarmult_base(&kB_point, k_scalar); /* compute k*B */
     ge25519_scalarmult(&kH_point, k_scalar, &H_point); /* compute k*H */
 
-    /* c = ECVRF_hash_points(h, gamma, k*B, k*H)
+    /* c = ECVRF_hash_points(Y, h, gamma, k*B, k*H)
      * (writes only to the first 16 bytes of c_scalar)
      * We need to pass kB and kH to bytes for the new
      * function signature
      * */
-    _vrf_ietfdraft10_point_to_string(kB_bytes, &kB_point);
-    _vrf_ietfdraft10_point_to_string(kH_bytes, &kH_point);
+    _vrf_ietfdraft12_point_to_string(kB_bytes, &kB_point);
+    _vrf_ietfdraft12_point_to_string(kH_bytes, &kH_point);
 
-    _vrf_ietfdraft10_hash_points(c_scalar, &H_point, Gamma_point, kB_bytes, kH_bytes);
+    _vrf_ietfdraft12_hash_points(c_scalar, Y_point, &H_point, Gamma_point, kB_bytes, kH_bytes);
     memset(c_scalar+16, 0, 16); /* zero the remaining 16 bytes of c_scalar */
 
     sc25519_muladd(s_scalar, c_scalar, x_scalar, k_scalar); /* pi[48:80] = s = c*x + k (mod q) */
@@ -129,7 +129,7 @@ static void produce_proof(ge25519_p3 *Gamma_point, unsigned char kB_bytes[crypto
  * Constant time in everything except alphalen (the length of the message).
  */
 static void
-vrf_prove(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES], const ge25519_p3 *Y_point,
+vrf_prove(unsigned char pi[crypto_vrf_ietfdraft12_PROOFBYTES], const ge25519_p3 *Y_point,
           const unsigned char x_scalar[crypto_core_ed25519_SCALARBYTES],
           const unsigned char truncated_hashed_sk_string[32],
           const unsigned char *alpha, unsigned long long alphalen)
@@ -140,7 +140,7 @@ vrf_prove(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES], const ge25519_p3 
     produce_proof(&Gamma_point, kB_bytes, kH_bytes, c_scalar, s_scalar, Y_point, x_scalar, truncated_hashed_sk_string, alpha, alphalen);
 
     /* output pi */
-    _vrf_ietfdraft10_point_to_string(pi, &Gamma_point); /* pi[0:32] = point_to_string(Gamma) */
+    _vrf_ietfdraft12_point_to_string(pi, &Gamma_point); /* pi[0:32] = point_to_string(Gamma) */
     memmove(pi + crypto_core_ed25519_BYTES, c_scalar, 16); /* pi[32:48] = c_scalar */
     memmove(pi + crypto_core_ed25519_BYTES + 16, s_scalar, crypto_core_ed25519_SCALARBYTES);
 
@@ -161,7 +161,7 @@ vrf_prove(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES], const ge25519_p3 
  * to allow for batch-verification.
  */
 static void
-vrf_prove_batchcompat(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT], const ge25519_p3 *Y_point,
+vrf_prove_batchcompat(unsigned char pi[crypto_vrf_ietfdraft12_PROOFBYTES_BATCHCOMPAT], const ge25519_p3 *Y_point,
           const unsigned char x_scalar[crypto_core_ed25519_SCALARBYTES],
           const unsigned char truncated_hashed_sk_string[32],
           const unsigned char *alpha, unsigned long long alphalen)
@@ -171,7 +171,7 @@ vrf_prove_batchcompat(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCO
 
     produce_proof(&Gamma_point, kB_bytes, kH_bytes, c_scalar, s_scalar, Y_point, x_scalar, truncated_hashed_sk_string, alpha, alphalen);
 
-    _vrf_ietfdraft10_point_to_string(pi, &Gamma_point); /* pi[0:32] = point_to_string(Gamma) */
+    _vrf_ietfdraft12_point_to_string(pi, &Gamma_point); /* pi[0:32] = point_to_string(Gamma) */
     memmove(pi + crypto_core_ed25519_BYTES, kB_bytes, crypto_core_ed25519_BYTES); /* pi[32:64] = point_to_string(kB_point) */
     memmove(pi + (crypto_core_ed25519_BYTES * 2), kH_bytes, crypto_core_ed25519_BYTES); /* pi[64:96] = point_to_string(kH_point) */
     memmove(pi + (crypto_core_ed25519_BYTES * 3), s_scalar, crypto_core_ed25519_SCALARBYTES);
@@ -195,8 +195,8 @@ vrf_prove_batchcompat(unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCO
  * fails.
  */
 int
-crypto_vrf_ietfdraft10_prove(unsigned char proof[crypto_vrf_ietfdraft10_PROOFBYTES],
-                             const unsigned char skpk[crypto_vrf_ietfdraft10_SECRETKEYBYTES],
+crypto_vrf_ietfdraft12_prove(unsigned char proof[crypto_vrf_ietfdraft12_PROOFBYTES],
+                             const unsigned char skpk[crypto_vrf_ietfdraft12_SECRETKEYBYTES],
                              const unsigned char *msg,
                              unsigned long long msglen)
 {
@@ -228,8 +228,8 @@ crypto_vrf_ietfdraft10_prove(unsigned char proof[crypto_vrf_ietfdraft10_PROOFBYT
  * fails.
  */
 int
-crypto_vrf_ietfdraft10_prove_batchcompat(unsigned char proof[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT],
-                             const unsigned char skpk[crypto_vrf_ietfdraft10_SECRETKEYBYTES],
+crypto_vrf_ietfdraft12_prove_batchcompat(unsigned char proof[crypto_vrf_ietfdraft12_PROOFBYTES_BATCHCOMPAT],
+                             const unsigned char skpk[crypto_vrf_ietfdraft12_SECRETKEYBYTES],
                              const unsigned char *msg,
                              unsigned long long msglen)
 {

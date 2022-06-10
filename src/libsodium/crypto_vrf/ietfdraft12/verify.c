@@ -24,10 +24,10 @@ SOFTWARE.
 #include <stdlib.h>
 
 #include "crypto_hash_sha512.h"
-#include "crypto_vrf_ietfdraft10.h"
+#include "crypto_vrf_ietfdraft12.h"
 #include "crypto_core_ed25519.h"
 #include "private/ed25519_ref10.h"
-#include "vrf_ietfdraft10.h"
+#include "vrf_ietfdraft12.h"
 #include "crypto_verify_16.h"
 
 static const unsigned char ZERO = 0x00;
@@ -50,11 +50,11 @@ multiply_by_cofactor(ge25519_p3 *point) {
     ge25519_p1p1_to_p3(point, &tmp2_point);      /* point = 8*input */
 }
 
-static void hash_gamma(unsigned char beta[crypto_vrf_ietfdraft10_OUTPUTBYTES], ge25519_p3 Gamma_point) {
+static void hash_gamma(unsigned char beta[crypto_vrf_ietfdraft12_OUTPUTBYTES], ge25519_p3 Gamma_point) {
     unsigned char gamma_string[crypto_core_ed25519_BYTES];
 
     multiply_by_cofactor(&Gamma_point);
-    _vrf_ietfdraft10_point_to_string(gamma_string, &Gamma_point);
+    _vrf_ietfdraft12_point_to_string(gamma_string, &Gamma_point);
 
     /* beta_string = Hash(suite_string || three_string || point_to_string(cofactor * Gamma) || zero_string ) */
     crypto_hash_sha512_state hs;
@@ -68,20 +68,20 @@ static void hash_gamma(unsigned char beta[crypto_vrf_ietfdraft10_OUTPUTBYTES], g
 /*
  * Convert a VRF proof pi into a VRF output hash beta per draft spec section 5.2.
  * This function does not verify the proof! For an untrusted proof, instead call
- * crypto_vrf_ietfdraft10_verify, which will output the hash if verification
+ * crypto_vrf_ietfdraft12_verify, which will output the hash if verification
  * succeeds.
  * Returns 0 on success, -1 on failure decoding the proof.
  */
 int
-crypto_vrf_ietfdraft10_proof_to_hash(unsigned char beta[crypto_vrf_ietfdraft10_OUTPUTBYTES],
-                                     const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES])
+crypto_vrf_ietfdraft12_proof_to_hash(unsigned char beta[crypto_vrf_ietfdraft12_OUTPUTBYTES],
+                                     const unsigned char pi[crypto_vrf_ietfdraft12_PROOFBYTES])
 {
     ge25519_p3    Gamma_point;
     unsigned char s_scalar[crypto_core_ed25519_SCALARBYTES];
 
     unsigned char c_scalar[16];
     /* (Gamma, c, s) = ECVRF_decode_proof(pi_string) */
-    if (_vrf_ietfdraft10_decode_proof(&Gamma_point, c_scalar, s_scalar, pi) != 0) {
+    if (_vrf_ietfdraft12_decode_proof(&Gamma_point, c_scalar, s_scalar, pi) != 0) {
         return -1;
     }
 
@@ -93,13 +93,13 @@ crypto_vrf_ietfdraft10_proof_to_hash(unsigned char beta[crypto_vrf_ietfdraft10_O
 /*
  * Convert a batch compatible VRF proof pi into a VRF output hash beta per draft spec section 5.2.
  * This function does not verify the proof! For an untrusted proof, instead call
- * crypto_vrf_ietfdraft10_verify, which will output the hash if verification
+ * crypto_vrf_ietfdraft12_verify, which will output the hash if verification
  * succeeds.
  * Returns 0 on success, -1 on failure decoding the proof.
  */
 int
-crypto_vrf_ietfdraft10_proof_to_hash_batchcompat(unsigned char beta[crypto_vrf_ietfdraft10_OUTPUTBYTES],
-                                     const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT])
+crypto_vrf_ietfdraft12_proof_to_hash_batchcompat(unsigned char beta[crypto_vrf_ietfdraft12_OUTPUTBYTES],
+                                     const unsigned char pi[crypto_vrf_ietfdraft12_PROOFBYTES_BATCHCOMPAT])
 {
     ge25519_p3    Gamma_point;
     unsigned char s_scalar[crypto_core_ed25519_SCALARBYTES];
@@ -107,7 +107,7 @@ crypto_vrf_ietfdraft10_proof_to_hash_batchcompat(unsigned char beta[crypto_vrf_i
 
     unsigned char U_bytes[crypto_core_ed25519_BYTES], V_bytes[crypto_core_ed25519_BYTES];
     /* (Gamma, U, V, s) = ECVRF_decode_proof(pi_string) */
-    if (_vrf_ietfdraft10_decode_proof_batchcompat(&Gamma_point, U_bytes, V_bytes, s_scalar, pi) != 0) {
+    if (_vrf_ietfdraft12_decode_proof_batchcompat(&Gamma_point, U_bytes, V_bytes, s_scalar, pi) != 0) {
         return -1;
     }
 
@@ -127,9 +127,9 @@ crypto_vrf_ietfdraft10_proof_to_hash_batchcompat(unsigned char beta[crypto_vrf_i
  * failure.
  */
 static int
-vrf_validate_key(ge25519_p3 *y_out, const unsigned char pk_string[crypto_vrf_ietfdraft10_PUBLICKEYBYTES])
+vrf_validate_key(ge25519_p3 *y_out, const unsigned char pk_string[crypto_vrf_ietfdraft12_PUBLICKEYBYTES])
 {
-    if (ge25519_has_small_order(pk_string) != 0 || _vrf_ietfdraft10_string_to_point(y_out, pk_string) != 0) {
+    if (ge25519_has_small_order(pk_string) != 0 || _vrf_ietfdraft12_string_to_point(y_out, pk_string) != 0) {
         return -1;
     }
     return 0;
@@ -139,7 +139,7 @@ vrf_validate_key(ge25519_p3 *y_out, const unsigned char pk_string[crypto_vrf_iet
  * 5.6.1. Return 1 if the key is valid, 0 otherwise.
  */
 int
-crypto_vrf_ietfdraft10_is_valid_key(const unsigned char pk[crypto_vrf_ietfdraft10_PUBLICKEYBYTES])
+crypto_vrf_ietfdraft12_is_valid_key(const unsigned char pk[crypto_vrf_ietfdraft12_PUBLICKEYBYTES])
 {
     ge25519_p3 point; /* unused */
     return (vrf_validate_key(&point, pk) == 0);
@@ -151,7 +151,7 @@ crypto_vrf_ietfdraft10_is_valid_key(const unsigned char pk[crypto_vrf_ietfdraft1
  * (but does depend on its length alphalen)
  */
 static int
-vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES],
+vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraft12_PROOFBYTES],
            const unsigned char *alpha, const unsigned long long alphalen)
 {
     /* Note: c fits in 16 bytes, but ge25519_scalarmult expects a 32-byte scalar.*/
@@ -163,7 +163,7 @@ vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraf
     ge25519_p1p1   tmp_p1p1_point;
     ge25519_cached tmp_cached_point;
 
-    if (_vrf_ietfdraft10_decode_proof(&Gamma_point, c_scalar, s_scalar, pi) != 0) {
+    if (_vrf_ietfdraft12_decode_proof(&Gamma_point, c_scalar, s_scalar, pi) != 0) {
         return -1;
     }
 
@@ -177,11 +177,11 @@ vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraf
      * If try and increment fails after `TAI_NR_TRIES` tries, then we run elligator, to ensure that
      * the function runs correctly.
      */
-    if (_vrf_ietfdraft10_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen) != 0) {
+    if (_vrf_ietfdraft12_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen) != 0) {
         _vrf_ietfdraft03_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
     };
 #else
-    _vrf_ietfdraft10_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
+    _vrf_ietfdraft12_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
 #endif
     ge25519_frombytes(&H_point, h_string);
 
@@ -196,7 +196,7 @@ vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraf
     ge25519_tobytes(U_bytes, &U_point);
     ge25519_tobytes(V_bytes, &V_point);
 
-    _vrf_ietfdraft10_hash_points(cprime, &H_point, &Gamma_point, U_bytes, V_bytes);
+    _vrf_ietfdraft12_hash_points(cprime, Y_point, &H_point, &Gamma_point, U_bytes, V_bytes);
     return crypto_verify_16(c_scalar, cprime);
 }
 
@@ -206,7 +206,7 @@ vrf_verify(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraf
  * (but does depend on its length alphalen)
  */
 static int
-vrf_verify_batchcompat(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT],
+vrf_verify_batchcompat(const ge25519_p3 *Y_point, const unsigned char pi[crypto_vrf_ietfdraft12_PROOFBYTES_BATCHCOMPAT],
            const unsigned char *alpha, const unsigned long long alphalen)
 {
     /* Note: c fits in 16 bytes, but ge25519_scalarmult expects a 32-byte scalar.*/
@@ -218,7 +218,7 @@ vrf_verify_batchcompat(const ge25519_p3 *Y_point, const unsigned char pi[crypto_
     ge25519_p1p1   tmp_p1p1_point;
     ge25519_cached tmp_cached_point;
 
-    if (_vrf_ietfdraft10_decode_proof_batchcompat(&Gamma_point, expected_U_bytes, expected_V_bytes, s_scalar, pi) != 0) {
+    if (_vrf_ietfdraft12_decode_proof_batchcompat(&Gamma_point, expected_U_bytes, expected_V_bytes, s_scalar, pi) != 0) {
         return -1;
     }
 
@@ -227,15 +227,15 @@ vrf_verify_batchcompat(const ge25519_p3 *Y_point, const unsigned char pi[crypto_
      * If try and increment fails after `TAI_NR_TRIES` tries, then we run elligator, to ensure that
      * the function runs correctly.
      */
-    if (_vrf_ietfdraft10_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen) != 0) {
+    if (_vrf_ietfdraft12_hash_to_curve_try_inc(h_string, Y_point, alpha, alphalen) != 0) {
         _vrf_ietfdraft03_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
     };
 #else
-    _vrf_ietfdraft10_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
+    _vrf_ietfdraft12_hash_to_curve_elligator2_25519(h_string, Y_point, alpha, alphalen);
 #endif
     ge25519_frombytes(&H_point, h_string);
 
-    _vrf_ietfdraft10_hash_points(c_scalar, &H_point, &Gamma_point, expected_U_bytes, expected_V_bytes);
+    _vrf_ietfdraft12_hash_points(c_scalar, Y_point, &H_point, &Gamma_point, expected_U_bytes, expected_V_bytes);
     /* vrf_decode_proof writes to the first 16 bytes of c_scalar; we zero the
      * second 16 bytes ourselves, as ge25519_scalarmult expects a 32-byte scalar.
      */
@@ -270,14 +270,14 @@ vrf_verify_batchcompat(const ge25519_p3 *Y_point, const unsigned char pi[crypto_
  * nonzero on failure.
  */
 int
-crypto_vrf_ietfdraft10_verify(unsigned char output[crypto_vrf_ietfdraft10_OUTPUTBYTES],
-                              const unsigned char pk[crypto_vrf_ietfdraft10_PUBLICKEYBYTES],
-                              const unsigned char proof[crypto_vrf_ietfdraft10_PROOFBYTES],
+crypto_vrf_ietfdraft12_verify(unsigned char output[crypto_vrf_ietfdraft12_OUTPUTBYTES],
+                              const unsigned char pk[crypto_vrf_ietfdraft12_PUBLICKEYBYTES],
+                              const unsigned char proof[crypto_vrf_ietfdraft12_PROOFBYTES],
                               const unsigned char *msg, const unsigned long long msglen)
 {
     ge25519_p3 Y;
     if ((vrf_validate_key(&Y, pk) == 0) && (vrf_verify(&Y, proof, msg, msglen) == 0)) {
-        return crypto_vrf_ietfdraft10_proof_to_hash(output, proof);
+        return crypto_vrf_ietfdraft12_proof_to_hash(output, proof);
     } else {
         return -1;
     }
@@ -293,14 +293,14 @@ crypto_vrf_ietfdraft10_verify(unsigned char output[crypto_vrf_ietfdraft10_OUTPUT
  * nonzero on failure.
  */
 int
-crypto_vrf_ietfdraft10_verify_batchcompat(unsigned char output[crypto_vrf_ietfdraft10_OUTPUTBYTES],
-                              const unsigned char pk[crypto_vrf_ietfdraft10_PUBLICKEYBYTES],
-                              const unsigned char proof[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT],
+crypto_vrf_ietfdraft12_verify_batchcompat(unsigned char output[crypto_vrf_ietfdraft12_OUTPUTBYTES],
+                              const unsigned char pk[crypto_vrf_ietfdraft12_PUBLICKEYBYTES],
+                              const unsigned char proof[crypto_vrf_ietfdraft12_PROOFBYTES_BATCHCOMPAT],
                               const unsigned char *msg, const unsigned long long msglen)
 {
     ge25519_p3 Y;
     if ((vrf_validate_key(&Y, pk) == 0) && (vrf_verify_batchcompat(&Y, proof, msg, msglen) == 0)) {
-        return crypto_vrf_ietfdraft10_proof_to_hash_batchcompat(output, proof);
+        return crypto_vrf_ietfdraft12_proof_to_hash_batchcompat(output, proof);
     } else {
         return -1;
     }

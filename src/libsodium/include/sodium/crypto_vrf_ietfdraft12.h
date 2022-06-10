@@ -1,6 +1,6 @@
 
-#ifndef crypto_vrf_ietfdraft10_H
-#define crypto_vrf_ietfdraft10_H
+#ifndef crypto_vrf_ietfdraft12_H
+#define crypto_vrf_ietfdraft12_H
 
 #include <stddef.h>
 
@@ -15,37 +15,37 @@
 extern "C" {
 #endif
 
-#define crypto_vrf_ietfdraft10_PUBLICKEYBYTES 32U
+#define crypto_vrf_ietfdraft12_PUBLICKEYBYTES 32U
 SODIUM_EXPORT
-size_t crypto_vrf_ietfdraft10_publickeybytes(void);
+size_t crypto_vrf_ietfdraft12_publickeybytes(void);
 
-#define crypto_vrf_ietfdraft10_SECRETKEYBYTES 64U
+#define crypto_vrf_ietfdraft12_SECRETKEYBYTES 64U
 SODIUM_EXPORT
-size_t crypto_vrf_ietfdraft10_secretkeybytes(void);
+size_t crypto_vrf_ietfdraft12_secretkeybytes(void);
 
-#define crypto_vrf_ietfdraft10_SEEDBYTES 32U
+#define crypto_vrf_ietfdraft12_SEEDBYTES 32U
 SODIUM_EXPORT
-size_t crypto_vrf_ietfdraft10_seedbytes(void);
+size_t crypto_vrf_ietfdraft12_seedbytes(void);
 
-#define crypto_vrf_ietfdraft10_PROOFBYTES 80U
-
-SODIUM_EXPORT
-size_t crypto_vrf_ietfdraft10_proofbytes(void);
-
-#define crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT 128U
+#define crypto_vrf_ietfdraft12_PROOFBYTES 80U
 
 SODIUM_EXPORT
-size_t crypto_vrf_ietfdraft10_proofbytes_batchcompat(void);
+size_t crypto_vrf_ietfdraft12_proofbytes(void);
 
-#define crypto_vrf_ietfdraft10_OUTPUTBYTES 64U
+#define crypto_vrf_ietfdraft12_PROOFBYTES_BATCHCOMPAT 128U
+
 SODIUM_EXPORT
-size_t crypto_vrf_ietfdraft10_outputbytes(void);
+size_t crypto_vrf_ietfdraft12_proofbytes_batchcompat(void);
+
+#define crypto_vrf_ietfdraft12_OUTPUTBYTES 64U
+SODIUM_EXPORT
+size_t crypto_vrf_ietfdraft12_outputbytes(void);
 
 // Generate a keypair.
 //
 // Thread-safe if sodium_init() has been called first.
 SODIUM_EXPORT
-int crypto_vrf_ietfdraft10_keypair(unsigned char *pk, unsigned char *sk);
+int crypto_vrf_ietfdraft12_keypair(unsigned char *pk, unsigned char *sk);
 
 // Generate a keypair from a seed.
 //
@@ -68,13 +68,13 @@ int crypto_vrf_ietfdraft10_keypair(unsigned char *pk, unsigned char *sk);
 //
 // Constant time.
 SODIUM_EXPORT
-int crypto_vrf_ietfdraft10_keypair_from_seed(unsigned char *pk,
+int crypto_vrf_ietfdraft12_keypair_from_seed(unsigned char *pk,
                                              unsigned char *sk,
                                              const unsigned char *seed);
 
 // Returns 1 if public key is valid (per IETF spec section 5.6.1); 0 if invalid.
 SODIUM_EXPORT
-int crypto_vrf_ietfdraft10_is_valid_key(const unsigned char *pk)
+int crypto_vrf_ietfdraft12_is_valid_key(const unsigned char *pk)
 __attribute__ ((warn_unused_result));
 
 // Generate a VRF proof for a message using a secret key.
@@ -86,7 +86,7 @@ __attribute__ ((warn_unused_result));
 // This runs in time constant with respect to sk and, fixing a value of mlen,
 // runs in time constant with respect to m.
 SODIUM_EXPORT
-int crypto_vrf_ietfdraft10_prove(unsigned char *proof, const unsigned char *sk,
+int crypto_vrf_ietfdraft12_prove(unsigned char *proof, const unsigned char *sk,
                                  const unsigned char *m,
                                  unsigned long long mlen);
 
@@ -99,7 +99,7 @@ int crypto_vrf_ietfdraft10_prove(unsigned char *proof, const unsigned char *sk,
 // This runs in time constant with respect to sk and, fixing a value of mlen,
 // runs in time constant with respect to m.
 SODIUM_EXPORT
-int crypto_vrf_ietfdraft10_prove_batchcompat(unsigned char *proof, const unsigned char *sk,
+int crypto_vrf_ietfdraft12_prove_batchcompat(unsigned char *proof, const unsigned char *sk,
                                  const unsigned char *m,
                                  unsigned long long mlen);
 
@@ -112,7 +112,7 @@ int crypto_vrf_ietfdraft10_prove_batchcompat(unsigned char *proof, const unsigne
 // Returns 0 if verification succeeds and -1 on failure. If the public key is
 // valid and verification succeeds, the output hash is stored in output.
 SODIUM_EXPORT
-int crypto_vrf_ietfdraft10_verify(unsigned char *output,
+int crypto_vrf_ietfdraft12_verify(unsigned char *output,
                                   const unsigned char *pk,
                                   const unsigned char *proof,
                                   const unsigned char *m,
@@ -128,7 +128,7 @@ __attribute__ ((warn_unused_result));
 // Returns 0 if verification succeeds and -1 on failure. If the public key is
 // valid and verification succeeds, the output hash is stored in output.
 SODIUM_EXPORT
-int crypto_vrf_ietfdraft10_verify_batchcompat(unsigned char *output,
+int crypto_vrf_ietfdraft12_verify_batchcompat(unsigned char *output,
                                   const unsigned char *pk,
                                   const unsigned char *proof,
                                   const unsigned char *m,
@@ -141,7 +141,7 @@ __attribute__ ((warn_unused_result));
 //
 // Returns 0 on success, nonzero on error decoding.
 SODIUM_EXPORT
-int crypto_vrf_ietfdraft10_proof_to_hash(unsigned char *hash,
+int crypto_vrf_ietfdraft12_proof_to_hash(unsigned char *hash,
                                          const unsigned char *proof);
 
 // Convert a batch compatible VRF proof to a VRF output.
@@ -150,21 +150,21 @@ int crypto_vrf_ietfdraft10_proof_to_hash(unsigned char *hash,
 //
 // Returns 0 on success, nonzero on error decoding.
 SODIUM_EXPORT
-int crypto_vrf_ietfdraft10_proof_to_hash_batchcompat(unsigned char *hash,
+int crypto_vrf_ietfdraft12_proof_to_hash_batchcompat(unsigned char *hash,
                                          const unsigned char *proof);
 
 // Convert a secret key to a public key.
 //
 // Constant time.
 SODIUM_EXPORT
-void crypto_vrf_ietfdraft10_sk_to_pk(unsigned char *pk,
+void crypto_vrf_ietfdraft12_sk_to_pk(unsigned char *pk,
                                      const unsigned char *sk);
 
 // Convert a secret key to the seed that generated it.
 //
 // Constant time.
 SODIUM_EXPORT
-void crypto_vrf_ietfdraft10_sk_to_seed(unsigned char *seed,
+void crypto_vrf_ietfdraft12_sk_to_seed(unsigned char *seed,
                                        const unsigned char *sk);
 
 #ifdef __cplusplus

@@ -20,40 +20,40 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "crypto_vrf_ietfdraft10.h"
+#include "crypto_vrf_ietfdraft12.h"
 
 size_t
-crypto_vrf_ietfdraft10_publickeybytes(void)
+crypto_vrf_ietfdraft12_publickeybytes(void)
 {
-    return crypto_vrf_ietfdraft10_PUBLICKEYBYTES;
+    return crypto_vrf_ietfdraft12_PUBLICKEYBYTES;
 }
 
 size_t
-crypto_vrf_ietfdraft10_secretkeybytes(void)
+crypto_vrf_ietfdraft12_secretkeybytes(void)
 {
-    return crypto_vrf_ietfdraft10_SECRETKEYBYTES;
+    return crypto_vrf_ietfdraft12_SECRETKEYBYTES;
 }
 
 size_t
-crypto_vrf_ietfdraft10_seedbytes(void)
+crypto_vrf_ietfdraft12_seedbytes(void)
 {
-    return crypto_vrf_ietfdraft10_SEEDBYTES;
+    return crypto_vrf_ietfdraft12_SEEDBYTES;
 }
 
 size_t
-crypto_vrf_ietfdraft10_proofbytes(void)
+crypto_vrf_ietfdraft12_proofbytes(void)
 {
-    return crypto_vrf_ietfdraft10_PROOFBYTES;
+    return crypto_vrf_ietfdraft12_PROOFBYTES;
 }
 
 size_t
-crypto_vrf_ietfdraft10_proofbytes_batchcompat(void)
+crypto_vrf_ietfdraft12_proofbytes_batchcompat(void)
 {
-    return crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT;
+    return crypto_vrf_ietfdraft12_PROOFBYTES_BATCHCOMPAT;
 }
 
 size_t
-crypto_vrf_ietfdraft10_outputbytes(void)
+crypto_vrf_ietfdraft12_outputbytes(void)
 {
-    return crypto_vrf_ietfdraft10_OUTPUTBYTES;
+    return crypto_vrf_ietfdraft12_OUTPUTBYTES;
 }

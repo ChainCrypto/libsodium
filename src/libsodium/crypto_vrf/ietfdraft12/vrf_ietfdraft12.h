@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef vrf_ietfdraft10_H
-#define vrf_ietfdraft10_H
+#ifndef vrf_ietfdraft12_H
+#define vrf_ietfdraft12_H
 
 #ifdef TRYANDINC
 static const unsigned char SUITE = 0x03; /* ECVRF-ED25519-SHA512-TAI */
@@ -29,31 +29,31 @@ static const unsigned char SUITE = 0x03; /* ECVRF-ED25519-SHA512-TAI */
 static const unsigned char SUITE = 0x04; /* ECVRF-ED25519-SHA512-ELL2 */
 #endif
 
-void _vrf_ietfdraft10_point_to_string(unsigned char string[crypto_core_ed25519_BYTES],
+void _vrf_ietfdraft12_point_to_string(unsigned char string[crypto_core_ed25519_BYTES],
                                       const ge25519_p3 *point);
 
-int _vrf_ietfdraft10_string_to_point(ge25519_p3 *point,
+int _vrf_ietfdraft12_string_to_point(ge25519_p3 *point,
                                      const unsigned char string[crypto_core_ed25519_BYTES]);
 
-int _vrf_ietfdraft10_decode_proof(ge25519_p3 *Gamma, unsigned char c[16],
-                              unsigned char s[crypto_core_ed25519_SCALARBYTES], const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES]);
+int _vrf_ietfdraft12_decode_proof(ge25519_p3 *Gamma, unsigned char c[16],
+                              unsigned char s[crypto_core_ed25519_SCALARBYTES], const unsigned char pi[crypto_vrf_ietfdraft12_PROOFBYTES]);
 
-int _vrf_ietfdraft10_decode_proof_batchcompat(ge25519_p3 *Gamma, unsigned char U[crypto_core_ed25519_BYTES], unsigned char V[crypto_core_ed25519_BYTES],
-                                  unsigned char s[crypto_core_ed25519_SCALARBYTES], const unsigned char pi[crypto_vrf_ietfdraft10_PROOFBYTES_BATCHCOMPAT]);
+int _vrf_ietfdraft12_decode_proof_batchcompat(ge25519_p3 *Gamma, unsigned char U[crypto_core_ed25519_BYTES], unsigned char V[crypto_core_ed25519_BYTES],
+                                  unsigned char s[crypto_core_ed25519_SCALARBYTES], const unsigned char pi[crypto_vrf_ietfdraft12_PROOFBYTES_BATCHCOMPAT]);
 
 void
-_vrf_ietfdraft10_hash_to_curve_elligator2_25519(unsigned char H_string[crypto_core_ed25519_BYTES],
+_vrf_ietfdraft12_hash_to_curve_elligator2_25519(unsigned char H_string[crypto_core_ed25519_BYTES],
                                                 const ge25519_p3 *Y_point,
                                                 const unsigned char *alpha,
                                                 const unsigned long long alphalen);
 
-int _vrf_ietfdraft10_hash_to_curve_try_inc(unsigned char H_string[crypto_core_ed25519_BYTES],
+int _vrf_ietfdraft12_hash_to_curve_try_inc(unsigned char H_string[crypto_core_ed25519_BYTES],
                                             const ge25519_p3 *Y_point,
                                             const unsigned char *alpha,
                                             const unsigned long long alphalen);
 
-void _vrf_ietfdraft10_hash_points(unsigned char c[16], const ge25519_p3 *P1,
-                                  const ge25519_p3 *P2, const unsigned char *P3,
-                                  const unsigned char *P4);
+void _vrf_ietfdraft12_hash_points(unsigned char c[16], const ge25519_p3 *P1,
+                                  const ge25519_p3 *P2, const ge25519_p3 *P3,
+                                  const unsigned char *P4, const unsigned char *P5);
 
 #endif
