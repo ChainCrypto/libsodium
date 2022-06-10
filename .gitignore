@@ -158,6 +158,8 @@ test/default/stream3
 test/default/stream4
 test/default/verify1
 test/default/vrf
+test/default/vrf_10
+test/default/vrf_10_batchcompat
 test/default/xchacha20
 test/js.done
 testing
