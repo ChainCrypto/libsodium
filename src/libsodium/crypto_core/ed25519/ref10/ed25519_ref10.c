@@ -481,7 +481,7 @@ ge25519_p2_0(ge25519_p2 *h)
  r = 2 * p
  */
 
-static void
+void
 ge25519_p2_dbl(ge25519_p1p1 *r, const ge25519_p2 *p)
 {
     fe25519 t0;
@@ -575,7 +575,7 @@ ge25519_p3_tobytes(unsigned char *s, const ge25519_p3 *h)
  r = 2 * p
  */
 
-static void
+void
 ge25519_p3_dbl(ge25519_p1p1 *r, const ge25519_p3 *p)
 {
     ge25519_p2 q;

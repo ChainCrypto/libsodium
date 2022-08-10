@@ -10,7 +10,7 @@
 
 #include <stddef.h>
 
-#include "crypto_vrf_ietfdraft03.h"
+#include "crypto_vrf_ietfdraft13.h"
 #include "export.h"
 
 #ifdef __cplusplus
@@ -20,27 +20,27 @@
 extern "C" {
 #endif
 
-#define crypto_vrf_PROOFBYTES crypto_vrf_ietfdraft03_BYTES
+#define crypto_vrf_PROOFBYTES crypto_vrf_ietfdraft13_BYTES
 SODIUM_EXPORT
 size_t crypto_vrf_bytes(void);
 
-#define crypto_vrf_OUTPUTBYTES crypto_vrf_ietfdraft03_OUTPUTBYTES
+#define crypto_vrf_OUTPUTBYTES crypto_vrf_ietfdraft13_OUTPUTBYTES
 SODIUM_EXPORT
 size_t crypto_vrf_outputbytes(void);
 
-#define crypto_vrf_SEEDBYTES crypto_vrf_ietfdraft03_SEEDBYTES
+#define crypto_vrf_SEEDBYTES crypto_vrf_ietfdraft13_SEEDBYTES
 SODIUM_EXPORT
 size_t crypto_vrf_seedbytes(void);
 
-#define crypto_vrf_PUBLICKEYBYTES crypto_vrf_ietfdraft03_PUBLICKEYBYTES
+#define crypto_vrf_PUBLICKEYBYTES crypto_vrf_ietfdraft13_PUBLICKEYBYTES
 SODIUM_EXPORT
 size_t crypto_vrf_publickeybytes(void);
 
-#define crypto_vrf_SECRETKEYBYTES crypto_vrf_ietfdraft03_SECRETKEYBYTES
+#define crypto_vrf_SECRETKEYBYTES crypto_vrf_ietfdraft13_SECRETKEYBYTES
 SODIUM_EXPORT
 size_t crypto_vrf_secretkeybytes(void);
 
-#define crypto_vrf_PRIMITIVE "ietfdraft03"
+#define crypto_vrf_PRIMITIVE "ietfdraft13"
 SODIUM_EXPORT
 const char *crypto_vrf_primitive(void);
 
@@ -56,7 +56,7 @@ __attribute__ ((nonnull));
 SODIUM_EXPORT
 int crypto_vrf_prove(unsigned char *proof, const unsigned char *m,
                      unsigned long long mlen, const unsigned char *sk)
-                     __attribute__ ((nonnull));
+__attribute__ ((nonnull));
 
 SODIUM_EXPORT
 int crypto_vrf_verify(unsigned char *output,
