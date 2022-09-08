@@ -92,7 +92,7 @@ int main(void)
     }
 
     proof[0][96] ^= 0x01;
-    proof[0][128] ^= 0x80;
+    proof[0][127] ^= 0x80;
 
     if (crypto_vrf_ietfdraft13_batch_verify(output, (const unsigned char **) pk, (const unsigned char **) proof, m, msglen, 3) == 0) {
         printf("verify succeeded with bad s value (high-order-bit flipped): [%u]\n", i);
