@@ -19,7 +19,7 @@ crypto_vrf_ietfdraft13_prove(unsigned char *proof,
     unsigned char az[64];
     unsigned char H_string[32];
     unsigned char kB_string[32], kH_string[32];
-    unsigned char string_to_hash[32 + mlen];
+    unsigned char *string_to_hash = malloc((32 + mlen) * sizeof(char));
     unsigned char hram[64], nonce[64];
     ge25519_p3    H, Gamma, kB, kH;
 
@@ -27,6 +27,10 @@ crypto_vrf_ietfdraft13_prove(unsigned char *proof,
     az[0] &= 248;
     az[31] &= 127;
     az[31] |= 64;
+
+    if (string_to_hash == NULL) {
+        return -1;
+    }
 
     memmove(string_to_hash, sk + 32, 32);
     memmove(string_to_hash + 32, m, mlen);
@@ -79,7 +83,7 @@ crypto_vrf_ietfdraft13_prove_batchcompat(unsigned char *proof,
     unsigned char az[64];
     unsigned char H_string[32];
     unsigned char kB_string[32], kH_string[32];
-    unsigned char string_to_hash[32 + mlen];
+    unsigned char *string_to_hash = malloc((32 + mlen) * sizeof(char));
     unsigned char hram[64], nonce[64];
     ge25519_p3    H, Gamma, kB, kH;
 
@@ -87,6 +91,10 @@ crypto_vrf_ietfdraft13_prove_batchcompat(unsigned char *proof,
     az[0] &= 248;
     az[31] &= 127;
     az[31] |= 64;
+
+    if (string_to_hash == NULL) {
+        return -1;
+    }
 
     memmove(string_to_hash, sk + 32, 32);
     memmove(string_to_hash + 32, m, mlen);

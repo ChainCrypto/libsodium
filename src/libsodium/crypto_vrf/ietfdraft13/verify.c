@@ -67,7 +67,8 @@ vrf_verify(const unsigned char *pi,
 {
     unsigned char H_string[32], U_string[32], V_string[32], Y_string[32];
     unsigned char cn[32], c[32], s[32];
-    unsigned char string_to_hash[32 + alphalen], hram[64];
+    unsigned char hram[64];
+    unsigned char *string_to_hash = malloc((32 + alphalen) * sizeof(char));
 
     crypto_hash_sha512_state hs;
     ge25519_p2     U, V;
@@ -92,9 +93,13 @@ vrf_verify(const unsigned char *pi,
 
     memset(c+16, 0, 16);
 
+    if (string_to_hash == NULL) {
+        return -1;
+    }
     memmove(string_to_hash, Y_string, 32);
     memmove(string_to_hash + 32, alpha, alphalen);
     crypto_core_ed25519_from_string(H_string, "ECVRF_edwards25519_XMD:SHA-512_ELL2_NU_\4", string_to_hash, 32 + alphalen, 2); /* elligator2 */
+
 
     ge25519_frombytes(&H, H_string);
     crypto_core_ed25519_scalar_negate(cn, c); /* negate scalar c */
@@ -142,7 +147,8 @@ vrf_verify_batchcompat(const unsigned char *pi,
 {
     unsigned char H_string[32], U_string[32], V_string[32], Y_string[32];
     unsigned char cn[32], c[32], s[32];
-    unsigned char string_to_hash[32 + alphalen], hram[64];
+    unsigned char hram[64];
+    unsigned char *string_to_hash = malloc((32 + alphalen) * sizeof(char));
 
     crypto_hash_sha512_state hs;
     ge25519_p2     U, V;
@@ -154,6 +160,10 @@ vrf_verify_batchcompat(const unsigned char *pi,
 
     if (ge25519_is_canonical(pi) == 0 ||
         ge25519_frombytes(&Gamma, pi) != 0) {
+        return -1;
+    }
+
+    if (string_to_hash == NULL) {
         return -1;
     }
 
@@ -297,7 +307,7 @@ static void double_w_times(ge25519_p3 *point, char w) {
     ge25519_p1p1_to_p3(point, &temp_p1);
 }
 
-static void ge25519_multi_scalarmult_vartime(ge25519_p3 *r, batch_heap *heap, size_t count) {
+static int ge25519_multi_scalarmult_vartime(ge25519_p3 *r, batch_heap *heap, size_t count) {
     unsigned long w;
     unsigned long max_digit;
     unsigned long digit_count;
@@ -310,6 +320,10 @@ static void ge25519_multi_scalarmult_vartime(ge25519_p3 *r, batch_heap *heap, si
     ge25519_cached buckets_sum;
     ge25519_cached res_cached;
     int i, j;
+
+    if (digits == NULL) {
+        return -1;
+    }
 
     if (count < 500) {
         w = 6;
@@ -324,6 +338,10 @@ static void ge25519_multi_scalarmult_vartime(ge25519_p3 *r, batch_heap *heap, si
     buckets_count = max_digit / 2;
     buckets = malloc(sizeof(ge25519_p3) * buckets_count);
 
+    if (buckets == NULL) {
+        return -1;
+    }
+
     // initialise the result as the identity element
     fe25519_0(r->X);
     fe25519_1(r->Y);
@@ -334,6 +352,9 @@ static void ge25519_multi_scalarmult_vartime(ge25519_p3 *r, batch_heap *heap, si
     // Get the 2^w radix representation
     for (i = 1; i < count; i++) {
         digits[i] = malloc(sizeof(char) * digit_count);
+        if (digits[i] == NULL) {
+            return -1;
+        }
         to_radix_2w(digits[i], heap->scalars[i], w);
     }
 
@@ -421,6 +442,10 @@ crypto_vrf_ietfdraft13_batch_verify(unsigned char *output[80],
     ge25519_p3 result;
     ge25519_p3 non_cached_points[5];
 
+    if (challenges == NULL) {
+        return -1;
+    }
+
     // initialise the factor of the base point as zero.
     memset(batch.scalars[0], 0, 32);
     for (int i = 0; i < num; i++) {
@@ -432,7 +457,8 @@ crypto_vrf_ietfdraft13_batch_verify(unsigned char *output[80],
             ge25519_frombytes_negate_vartime(&non_cached_points[3], proof[i]) == 0 &&
             ge25519_frombytes_negate_vartime(&non_cached_points[4], proof[i] + 64) == 0)
         {
-            unsigned char string_to_hash[32 + msglen[i]], challenge[64], H_string[32];
+            unsigned char challenge[64], H_string[32];
+            unsigned char *string_to_hash = malloc((32 + msglen[i]) * sizeof(char));
 
             ge25519_p3 temp_p3;
             ge25519_p1p1 temp_p1;
@@ -441,6 +467,10 @@ crypto_vrf_ietfdraft13_batch_verify(unsigned char *output[80],
             crypto_hash_sha512_state hs;
 
             challenges[i] = malloc(sizeof(char) * 32);
+            if (challenges[i] == NULL || string_to_hash == NULL) {
+                return -1;
+            }
+
             memmove(string_to_hash, pk[i], 32);
             memmove(string_to_hash + 32, msg[i], msglen[i]);
             crypto_core_ed25519_from_string(H_string, "ECVRF_edwards25519_XMD:SHA-512_ELL2_NU_\4", string_to_hash, 32 + msglen[i], 2); /* elligator2 */
@@ -489,7 +519,9 @@ crypto_vrf_ietfdraft13_batch_verify(unsigned char *output[80],
         }
     }
 
-    ge25519_multi_scalarmult_vartime(&result, &batch, num * 5 + 1);
+    if (ge25519_multi_scalarmult_vartime(&result, &batch, num * 5 + 1) != 0) {
+        return -1;
+    }
 
     if (is_identity(&result) != 0) {
         return -1;
