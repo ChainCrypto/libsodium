@@ -408,6 +408,8 @@ static int ge25519_multi_scalarmult_vartime(ge25519_p3 *r, batch_heap *heap, siz
     ge25519_scalarmult_base(&temp_p3, heap->scalars[0]);
     ge25519_add(&temp_p1, &temp_p3, &res_cached);
     ge25519_p1p1_to_p3(r, &temp_p1);
+
+    return 0;
 }
 
 static int is_identity(const ge25519_p3 *point) {
@@ -428,7 +430,7 @@ static int is_identity(const ge25519_p3 *point) {
 }
 
 int
-crypto_vrf_ietfdraft13_batch_verify(unsigned char *output[80],
+crypto_vrf_ietfdraft13_batch_verify(unsigned char *output[64],
                                     const unsigned char *pk[32],
                                     const unsigned char *proof[128],
                                     const unsigned char **msg,
